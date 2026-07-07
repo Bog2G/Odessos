@@ -1,0 +1,1631 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#f5f6f8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ODESSOS">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>ODESSOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f6f8; --surf:#ffffff; --line:#e6e8ec; --line2:#eef0f3;
+  --ink:#1a1d21; --dim:#8a9099; --dim2:#b4b9c0;
+  --acc:#5b5bd6; --acc-soft:#f0f0fb; --acc-line:#e2e2f6;
+  --grn:#3f9d6b; --grn-soft:#e9f5ef;
+  --amber:#b3641e; --amber-soft:#fdf3e7; --amber-line:#f0ddc4;
+  --red:#c0453a; --red-soft:#faecea;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Inter',system-ui,-apple-system,sans-serif;
+  --rad:16px; --rad-s:10px;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;
+  padding-top:calc(var(--sat) + 86px);padding-bottom:calc(var(--sab) + 74px);min-height:100dvh}
+button{font-family:inherit;border:0;background:none;cursor:pointer;color:inherit}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:var(--rad-s);padding:9px 11px;width:100%}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.mono{font-family:var(--mono)}
+.num{font-family:var(--mono);font-weight:600;letter-spacing:-.01em}
+
+/* ---------- header + signal strip ---------- */
+#hdr{position:fixed;top:0;left:0;right:0;z-index:40;background:rgba(245,246,248,.92);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);
+  padding:calc(var(--sat) + 10px) 16px 0}
+#hdr .row{display:flex;align-items:center;gap:10px}
+#hdr .brand{font-weight:800;font-size:15px;letter-spacing:.14em}
+#hdr .date{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:1px}
+#hdr .rk{margin-left:auto;text-align:right}
+#hdr .rk .r{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--acc);font-weight:600}
+#hdr .rk .l{font-size:11px;color:var(--dim)}
+#hdr .rk .l b{color:var(--ink);font-family:var(--mono)}
+#xpbar{height:3px;border-radius:2px;background:var(--line2);margin-top:7px;overflow:hidden}
+#xpbar i{display:block;height:100%;background:var(--acc);width:0%;transition:width .4s}
+#sig{display:block;width:100%;height:22px;margin-top:2px}
+
+/* ---------- layout ---------- */
+main{max-width:520px;margin:0 auto;padding:14px 14px 8px}
+.view{display:none}.view.on{display:block}
+.glbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);font-weight:600;margin:18px 2px 8px;display:flex;align-items:center;gap:8px}
+.glbl .r{margin-left:auto;letter-spacing:0}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:var(--rad);overflow:hidden;margin-bottom:12px}
+.prow{display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid var(--line2)}
+.prow:last-child{border-bottom:0}
+.prow .lab{font-size:13.5px;line-height:1.35;flex:1;min-width:0}
+.prow .lab small{display:block;color:var(--dim);font-size:11.5px;margin-top:1px}
+.prow .meta{font-family:var(--mono);font-size:10.5px;color:var(--dim);white-space:nowrap;text-align:right}
+.prow .meta b{color:var(--grn);font-weight:600}
+.pill-h{display:flex;align-items:center;gap:8px;padding:11px 14px 3px}
+.pill-h .nm{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.1em}
+.pill-h .stt{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:.06em}
+.pill-h .hrs{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--acc);font-weight:600}
+.chip{font-family:var(--mono);font-size:10px;background:var(--acc-soft);border-radius:7px;padding:4px 8px;color:#4a4a86}
+.chip b{color:var(--acc)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--ink);color:#fff;
+  font-weight:600;font-size:13px;padding:11px 16px;border-radius:12px;transition:transform .08s}
+.btn:active{transform:scale(.97)}
+.btn.sec{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.btn.acc{background:var(--acc)}
+.btn.sm{padding:7px 11px;font-size:12px;border-radius:9px}
+.btn.ghost{background:none;border:1px dashed var(--line);color:var(--dim)}
+.btn:disabled{opacity:.4;pointer-events:none}
+.check{width:20px;height:20px;border-radius:7px;border:1.6px solid #cdd1d7;flex:none;display:grid;place-items:center;
+  font-size:12px;color:#fff;transition:.15s}
+.check.done{background:var(--grn);border-color:var(--grn)}
+.done-lab{text-decoration:line-through;color:var(--dim)}
+.banner{border-radius:var(--rad);padding:12px 14px;margin-bottom:12px;font-size:13px}
+.banner.red{background:var(--red-soft);border:1px solid #efd4d1;color:#7c2f28}
+.banner .x{float:right;font-family:var(--mono);color:inherit;opacity:.6;padding:0 4px}
+.empty{color:var(--dim);font-size:12.5px;padding:14px;text-align:center}
+.tag-u{font-family:var(--mono);font-size:9.5px;color:var(--acc);font-weight:700}
+.rare .lab .t::after{content:'RARE';font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;color:var(--amber);
+  border:1px solid var(--amber-line);background:var(--amber-soft);border-radius:5px;padding:1px 5px;margin-left:7px;vertical-align:1px}
+.chal-card{border:1px solid var(--amber-line);background:linear-gradient(135deg,var(--amber-soft),#fff 55%)}
+.dir-card{border:1px solid var(--acc-line);background:linear-gradient(135deg,var(--acc-soft),#fff 60%)}
+.gate-flag{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--amber);font-weight:700}
+
+/* stats */
+.statrow{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line2)}
+.statrow:last-child{border-bottom:0}
+.statrow .k{font-family:var(--mono);font-size:11px;font-weight:700;width:36px;letter-spacing:.06em}
+.statrow .v{font-family:var(--mono);font-size:18px;font-weight:700;width:40px;text-align:right}
+.statrow .barwrap{flex:1}
+.statrow .bar{height:6px;border-radius:4px;background:var(--line2);overflow:hidden;position:relative}
+.statrow .bar i{display:block;height:100%;background:var(--acc);border-radius:4px;transition:width .4s}
+.statrow .bar.atgate i{background:var(--amber)}
+.statrow .sub{font-family:var(--mono);font-size:9.5px;color:var(--dim);margin-top:4px;display:flex;justify-content:space-between}
+
+/* nav */
+#nav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:rgba(255,255,255,.94);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);
+  display:flex;justify-content:space-around;padding:8px 8px calc(var(--sab) + 8px)}
+#nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--dim);
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;padding:5px 0;border-radius:10px}
+#nav button.on{color:var(--acc)}
+#nav .ic{font-size:16px;line-height:1;font-family:var(--mono)}
+#fab{position:fixed;right:16px;bottom:calc(var(--sab) + 84px);z-index:39;width:52px;height:52px;border-radius:17px;
+  background:var(--ink);color:#fff;font-size:24px;font-weight:300;box-shadow:0 10px 26px -8px rgba(20,22,30,.45);
+  display:grid;place-items:center}
+
+/* sheet + modal */
+#shroud{position:fixed;inset:0;background:rgba(20,22,30,.42);z-index:60;display:none}
+#shroud.on{display:block}
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:61;background:var(--surf);border-radius:22px 22px 0 0;
+  transform:translateY(105%);transition:transform .26s cubic-bezier(.3,.9,.3,1);max-height:86dvh;overflow:auto;
+  padding:16px 18px calc(var(--sab) + 20px)}
+#sheet.on{transform:translateY(0)}
+#sheet h3{font-size:16px;font-weight:800;letter-spacing:-.01em;margin-bottom:2px}
+#sheet .sub{color:var(--dim);font-size:12px;margin-bottom:14px}
+.frow{margin-bottom:11px}
+.frow label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:5px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:8px 12px;font-size:12.5px}
+.seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.sheet-actions{display:flex;gap:9px;margin-top:16px}
+.sheet-actions .btn{flex:1}
+#toasts{position:fixed;top:calc(var(--sat) + 92px);left:0;right:0;z-index:80;display:flex;flex-direction:column;
+  align-items:center;gap:7px;pointer-events:none}
+.toast{background:var(--ink);color:#fff;font-size:12.5px;padding:9px 15px;border-radius:20px;
+  box-shadow:0 8px 24px -8px rgba(0,0,0,.4);animation:tin .22s;font-family:var(--mono);max-width:88%}
+.toast.gold{background:var(--amber)}
+@keyframes tin{from{opacity:0;transform:translateY(-8px)}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.list-btn{width:100%;text-align:left;display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid var(--line2);font-size:13.5px}
+.list-btn:last-child{border-bottom:0}
+.list-btn small{display:block;color:var(--dim);font-size:11px}
+.list-btn .r{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+.day-card .dh{display:flex;align-items:baseline;gap:8px;padding:11px 14px 5px}
+.day-card .dh .d{font-family:var(--mono);font-size:11px;font-weight:700}
+.day-card .dh .s{font-family:var(--mono);font-size:9.5px;margin-left:auto}
+.day-card .body{padding:0 14px 12px;font-size:12.5px;color:var(--dim)}
+.day-card .note{color:var(--ink);font-size:13px;margin-top:5px;white-space:pre-wrap}
+.gatebox{border-top:1px solid var(--line2);padding:11px 14px}
+.gatebox .gh{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.1em}
+.gatebox .req{font-size:12px;color:var(--dim);margin-top:5px;line-height:1.5}
+.filerow{padding:12px 14px;border-bottom:1px solid var(--line2)}
+.filerow:last-child{border-bottom:0}
+.filerow .fn{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em}
+.filerow .fl{font-size:12.5px;color:var(--dim);margin-top:3px;font-style:italic}
+.filerow.locked{opacity:.45}
+.filerow.locked .fl{filter:blur(3px)}
+.smallcaps{font-variant:all-small-caps;letter-spacing:.08em}
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <div class="row">
+    <div>
+      <div class="brand">ODESSOS</div>
+      <div class="date" id="h-date"></div>
+    </div>
+    <div class="rk">
+      <div class="r" id="h-rank">NOBODY</div>
+      <div class="l">lv <b id="h-lvl">1</b> · <span class="num" id="h-xp">0</span> xp</div>
+    </div>
+  </div>
+  <div id="xpbar"><i id="h-xpfill"></i></div>
+  <canvas id="sig" width="520" height="22"></canvas>
+</header>
+
+<main>
+  <section class="view on" id="v-today"></section>
+  <section class="view" id="v-tracks"></section>
+  <section class="view" id="v-log"></section>
+  <section class="view" id="v-you"></section>
+</main>
+
+<button id="fab" onclick="openLedger()" aria-label="Log activity">+</button>
+
+<nav id="nav">
+  <button class="on" data-v="today" onclick="tab('today')"><span class="ic">◉</span>TODAY</button>
+  <button data-v="tracks" onclick="tab('tracks')"><span class="ic">⛰</span>TRACKS</button>
+  <button data-v="log" onclick="tab('log')"><span class="ic">≡</span>LOG</button>
+  <button data-v="you" onclick="tab('you')"><span class="ic">Ø</span>YOU</button>
+</nav>
+
+<div id="shroud" onclick="closeSheet()"></div>
+<div id="sheet" role="dialog" aria-modal="true"></div>
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* ================= CONSTANTS ================= */
+const KEY='odessos_v5';
+const STATS=['STR','VIT','INT','WIS','CHA'];
+const PRICE=[3,5,8,12,20];                 // units per point, by band
+const UCAP={STR:2,VIT:2,INT:3,WIS:3,CHA:3}; // units/day cap
+const RANKS=[[1,'NOBODY'],[3,'DRIFTER'],[5,'RUNNER'],[8,'OPERATOR'],[11,'GHOST'],[15,'WRAITH'],[19,'SPECTER'],[24,'REVENANT'],[30,'LEGEND'],[37,'MYTH']];
+const XP={hour:12,target:20,train:15,prog:5,ma:20,block:15,quota:50,dir:250,book:40,
+  contract:{ERRAND:12,JOB:30,HEIST:60},free:{S:8,M:14,L:20},
+  sell:{demo:25,outreach:10,post:12,event:15,talk:30,convo:10}};
+const xpToNext=l=>120+(l-1)*90;
+function levelFromXP(x){let l=1;while(x>=xpToNext(l)){x-=xpToNext(l);l++;if(l>99)break}return{l,into:x,need:xpToNext(l)}}
+const rankFor=l=>{let r=RANKS[0][1];for(const[a,b]of RANKS)if(l>=a)r=b;return r};
+
+const GATES={
+ STR:{20:{n:'FIRST PLATE',t:'lifts',r:{sq:1.0,be:.75,dl:1.25},d:'Clear 2 of 3: squat 1.0×BW · bench 0.75×BW · deadlift 1.25×BW'},
+      40:{n:'NOVICE IRON',t:'lifts',r:{sq:1.25,be:1.0,dl:1.5},d:'Clear 2 of 3: squat 1.25×BW · bench 1.0×BW · deadlift 1.5×BW'},
+      60:{n:'INTERMEDIATE',t:'lifts',r:{sq:1.6,be:1.25,dl:2.0},d:'Clear 2 of 3: squat 1.6×BW · bench 1.25×BW · deadlift 2.0×BW'},
+      80:{n:'ADVANCED',t:'lifts',r:{sq:2.25,be:1.75,dl:2.5},d:'Clear 2 of 3: squat 2.25×BW · bench 1.75×BW · deadlift 2.5×BW'},
+      100:{n:'ELITE',t:'lifts',r:{sq:2.75,be:2.1,dl:3.0},d:'Clear 2 of 3: squat 2.75×BW · bench 2.1×BW · deadlift 3.0×BW'}},
+ VIT:{20:{n:'OFF THE COUCH',t:'vit',d:'Finish a 5k, any pace — or swim 1 km continuous',p:{k5:9999,swim:'1 km continuous swim, any stroke'}},
+      40:{n:'SUB-30',t:'vit',d:'5k under 30:00 — or 10k under 63:00 — or swim 2 km continuous',p:{k5:1800,k10:3780,swim:'2 km continuous swim'}},
+      60:{n:'SUB-25',t:'vit',d:'5k under 25:00 — or 10k under 52:00',p:{k5:1500,k10:3120}},
+      80:{n:'SUB-21',t:'vit',d:'5k under 21:00 — or 10k under 43:30 — or half marathon under 1:37',p:{k5:1260,k10:2610,half:5820}},
+      100:{n:'SUB-18',t:'vit',d:'5k under 18:00 — or 10k under 37:30 — or half under 1:23',p:{k5:1080,k10:2250,half:4980}}},
+ INT:{20:{n:'BOOTED',t:'list',d:'MA diagnostic done + Foundations I ≥50% · 10 NeetCode solved · pwn Linux Luminarium done'},
+      40:{n:'OPERATOR',t:'list',d:'MA Foundations I complete · CS50 weeks 1–5 psets · NeetCode 50 · first pwn belt'},
+      60:{n:'ENGINEER',t:'list',d:'MA Foundations II complete · NeetCode 150 done · pwn yellow belt · THM SOC L1 100%'},
+      80:{n:'ARCHITECT',t:'list',d:'MA Foundations III or Linear Algebra · pwn green belt · SAL1-tier cert · one original security tool shipped'},
+      100:{n:'THE INSANE',t:'list',d:'MA Proofs/Analysis tier · pwn blue-belt tier · original research-grade project'}},
+ WIS:{20:{n:'FIRST SHELF',t:'wis',b:3,c:800,d:'3 books w/ synthesis notes — or chess.com rapid 800'},
+      40:{n:'READER',t:'wis',b:10,c:1000,d:'10 books — or rapid 1000'},
+      60:{n:'SYNTHESIST',t:'wis',b:25,c:1200,d:'25 books — or rapid 1200 (top ~30%)'},
+      80:{n:'SAGE',t:'wis',b:50,c:1600,d:'50 books — or rapid 1600 (top ~7%)'},
+      100:{n:'ORACLE',t:'wis',b:100,c:2000,d:'100 books — or rapid 2000 (top ~1%)'}},
+ CHA:{20:{n:'FIRST CONTACT',t:'list',d:'5 demos/calls delivered + 3 posts published'},
+      40:{n:'VOICE',t:'list',d:'25 demos/calls + first talk to 5+ people'},
+      60:{n:'PRESENCE',t:'list',d:'100 lifetime reps incl. 3 talks'},
+      80:{n:'CLOSER',t:'list',d:'20 customers won through your own pipeline — or a conference talk'},
+      100:{n:'GRAVITAS',t:'list',d:'Keynote / raise tier'}}
+};
+
+/* ---- ledger kinds: [label, stat, unit?, xp, sub] ---- */
+const KINDS={
+ train:['Training session','STR',1,XP.train,'≥45 min, progression attempt'],
+ cardio:['Cardio session','VIT',1,15,'≥30 min steady or ≥15 min hard'],
+ swim:['Swim','VIT',1,16,'≥20 min in the water'],
+ sport:['Sport','VIT',1,15,'≥45 min'],
+ mobility:['Mobility','',0,10,'≥20 min · joint health, not VIT'],
+ cold:['Cold shower','VIT',0,8,'full cold, 2+ min'],
+ read:['Reading session','WIS',1,10,'≥25 min · 1/day counts'],
+ chess:['Chess block','WIS',1,12,'30 min study or 3 rapid + 1 review · 4/wk'],
+ review:['Weekly review','WIS',1,14,'written, honest'],
+ longform:['Long-form study + note','WIS',1,12,'technical/strategy piece · 2/wk'],
+ ma:['Math Academy goal','INT',1,XP.ma,'daily XP goal hit'],
+ pwn:['pwn.college challenge','INT',1,XP.block,'solved'],
+ neet:['NeetCode problem','INT',1,XP.block,'solved unassisted'],
+ cs50:['CS50 pset step','INT',1,XP.block,'milestone done'],
+ thm:['THM room','INT',1,XP.block,'completed'],
+ demo:['Demo / discovery call','CHA',2,XP.sell.demo,'delivered'],
+ outreach:['Outreach batch','CHA',1,XP.sell.outreach,'≥5 sent, ≥1 reply'],
+ post:['Post published','CHA',1,XP.sell.post,'2/wk count'],
+ event:['Event / meetup','CHA',2,XP.sell.event,'showed up, talked'],
+ convo:['Hard conversation','CHA',1,XP.sell.convo,'you initiated'],
+ talk:['Talk (5+ people)','CHA',3,XP.sell.talk,'delivered'],
+ sunrise:['Sunrise walk','VIT',0,8,'out before 08:00'],
+ med:['Meditation','WIS',0,8,'≥10 min'],
+ custom:['Custom (XP only)','',0,10,'anything else worth logging']
+};
+
+/* ---- side-quest deck: [id,stat,rarity1-3,unit,quick,kind,name,done] ; {n} scales ---- */
+const DECK=[
+['s01','STR',1,0,1,'','Grip hang {n}s total','done = timer, any splits'],
+['s02','STR',1,1,0,'train','Bodyweight circuit ×{n} rounds','pushups·squats·rows, no rest between'],
+['s03','STR',2,1,0,'train','EMOM 12 min, STR-scaled','done = all rounds completed'],
+['s04','STR',1,0,1,'','{n} pushups through the day','strict form, any sets'],
+['s05','STR',2,1,0,'train','Dips + pullups ladder to {n}','1-2-3… up and back down'],
+['s06','STR',1,0,1,'','Plank {n}s cumulative','done = total held'],
+['s07','STR',2,0,0,'','Farmer carry 10 min','heaviest you can hold, walk'],
+['s08','STR',2,1,0,'train','Tempo pushups 4×{n}','3s down, 1s up'],
+['s09','STR',1,0,1,'','Wall sit {n}s','one go if you can'],
+['s10','STR',3,1,0,'train','Century: 100 pushups + 100 squats','done = both, same day'],
+['s11','STR',1,0,1,'','{n} bodyweight squats','below parallel'],
+['s12','STR',2,1,0,'train','Loaded backpack squats 5×15','pack it heavy with books/water, below parallel'],
+['s13','STR',2,1,0,'train','Pistol squat practice 15 min','progressions count'],
+['s14','STR',1,0,1,'','Dead hang 3×max','note the times'],
+['s15','STR',2,0,0,'','Core circuit 15 min','no phone between sets'],
+['s16','STR',1,0,1,'','{n} lunges per leg','walking or static'],
+['s17','STR',2,1,0,'train','Push day finisher: burnout set','one movement to failure ×3'],
+['s18','STR',1,0,1,'','Bear crawl 5 min total','hallway counts'],
+['s19','STR',2,0,0,'','Towel rows 4×{n}','door anchor, slow'],
+['s20','STR',3,1,0,'train','Gate rehearsal: work to heavy single','stop at RPE 8, log numbers'],
+['v01','VIT',1,1,0,'swim','Sea swim 20 min','done = in the water, moving'],
+['v02','VIT',1,1,0,'cardio','Zone-2 run {n} min','conversational pace'],
+['v03','VIT',1,0,1,'','10k steps today','count at 23:00'],
+['v04','VIT',2,1,0,'cardio','Sprint intervals 8×30s','full rest between'],
+['v07','VIT',1,0,1,'sunrise','Sunrise walk 20 min','out before 08:00'],
+['v08','VIT',2,1,0,'cardio','Jump rope {n} min','trips don\u2019t reset it'],
+['v09','VIT',2,1,0,'cardio','Hill repeats ×8','same hill, hard up, easy down'],
+['v11','VIT',2,1,0,'cardio','Long walk 60 min, no audio','just you and Varna'],
+['v13','VIT',2,1,0,'sport','Shadowbox 6×2 min','last two rounds hard'],
+['v15','VIT',3,1,0,'cardio','10k run','any pace, one go'],
+['v17','VIT',2,1,0,'swim','Swim drills 30 min','technique focus'],
+['v18','VIT',1,0,1,'','Balance work 10 min','single-leg, eyes closed sets'],
+['v19','VIT',2,1,0,'cardio','Row / bike 30 min steady','HR in zone 2'],
+['v21','VIT',2,1,0,'cardio','Beach run 30 min','sand tax accepted'],
+['v23','VIT',2,1,0,'sport','Park workout 40 min','bars, ground, whatever\u2019s there'],
+['v25','VIT',2,1,0,'cardio','Tempo run 20 min','comfortably hard'],
+['v27','VIT',2,1,0,'cardio','Stairs: 50 floors today','elevator is dead to you'],
+['v28','VIT',1,0,1,'','Walk after every meal 10 min','all three'],
+['v29','VIT',3,1,0,'cardio','5k time trial','log the time \u2014 gate fuel'],
+['w01','WIS',1,1,1,'read','Read 25 min','physical or e-reader, no phone'],
+['w02','WIS',2,1,0,'read','Read 45 min deep','one sitting'],
+['w03','WIS',1,1,0,'chess','3 rapid games, review 1 loss','review note saved'],
+['w04','WIS',1,0,1,'','20 chess puzzles','no takebacks'],
+['w05','WIS',2,1,0,'chess','Endgame drill 30 min','one family of positions'],
+['w06','WIS',1,0,1,'','Summarize today in 5 lines','journal counts'],
+['w07','WIS',2,1,0,'longform','Long article + 5-line note','technical or strategy'],
+['w08','WIS',1,0,1,'med','Meditate 10 min','timer, seated'],
+['w09','WIS',2,1,0,'','Teach-back: explain today\u2019s math in 5 lines','write like you\u2019re teaching'],
+['w10','WIS',1,0,1,'','No phone, first hour awake','done = held'],
+['w11','WIS',2,1,0,'chess','Opening study 30 min','one line, both sides'],
+['w12','WIS',1,0,1,'','Plan tomorrow, tonight','3 outcomes on paper'],
+['w13','WIS',2,1,0,'read','Chapter + margin notes','argue with the author'],
+['w14','WIS',1,0,1,'','Re-read old notes 15 min','any past book/course'],
+['w15','WIS',2,0,0,'','Documentary + 5-line note','something outside your lane'],
+['w16','WIS',3,1,0,'read','100 pages in a day','done = counted honestly'],
+['w17','WIS',1,0,1,'','Flashcards 15 min','math or security terms'],
+['w18','WIS',2,1,0,'chess','Blunder review: last 5 losses','find the pattern'],
+['w19','WIS',1,0,1,'','Write one hard question down','the kind you avoid'],
+['w20','WIS',2,1,0,'longform','Biography chapter + note','someone who built something'],
+['w21','WIS',1,0,1,'','15-min life audit','what\u2019s drifting?'],
+['w22','WIS',2,0,0,'','Anti-note: argue against a book you love','5 lines minimum'],
+['w23','WIS',1,0,1,'','Read standing / walking 20 min','moving brain'],
+['w24','WIS',2,1,0,'read','Finish the current chapter tonight','however long it takes'],
+['w25','WIS',3,1,0,'chess','10 rapid games, full session review','the whole set, honestly'],
+['c01','CHA',1,1,1,'convo','Voice-call someone you\u2019ve been texting','call >5 min'],
+['c02','CHA',1,1,1,'','Ask 3 genuine follow-up questions before talking about yourself','one conversation, dig into their answers'],
+['c03','CHA',1,0,1,'','Genuine compliment to a stranger','in person'],
+['c04','CHA',1,1,1,'convo','Ask one uncomfortable question','to a real person'],
+['c05','CHA',2,1,0,'event','Show up somewhere alone','event, meetup, anything'],
+['c06','CHA',1,0,1,'','Gym small talk with someone new','beyond \u201cyou done?\u201d'],
+['c07','CHA',1,1,1,'convo','Call family, 10 min','ask two questions'],
+['c08','CHA',2,1,0,'convo','Full presence: no phone, no scanning the room','one conversation, don\u2019t rehearse your reply while they talk'],
+['c09','CHA',1,0,1,'','Order in person, phone away','eye contact, name'],
+['c10','CHA',2,1,0,'convo','Negotiate one small thing','price, deadline, anything'],
+['c11','CHA',1,0,1,'','Thank someone, specifically','name the exact thing'],
+['c12','CHA',2,1,0,'convo','Give someone honest feedback kindly','they should feel helped'],
+['c13','CHA',2,1,0,'event','Invite someone to coffee','send it today'],
+['c14','CHA',1,0,1,'','Speak first in a group today','any group'],
+['c15','CHA',2,0,0,'','Tell a full story at dinner','beginning, middle, end'],
+['c16','CHA',2,1,0,'convo','Make them do 70% of the talking','curiosity over performance, one whole conversation'],
+['c17','CHA',2,1,0,'convo','Help a stranger with something real','carry, fix, direct'],
+['c18','CHA',2,1,0,'talk','Teach someone something for 10 min','they should be able to redo it'],
+['c19','CHA',3,1,0,'talk','Record yourself speaking 3 min, watch it','topic of your choice, full watch'],
+['c20','CHA',1,0,1,'','Eye contact day','hold it in every conversation'],
+['c21','CHA',1,0,1,'','One hour, zero filler words','\u201clike, basically, actually\u201d'],
+['c22','CHA',2,1,0,'event','Host something small','games, food, walk'],
+['c23','CHA',2,1,0,'convo','Ask someone senior for advice','one specific question'],
+['c24','CHA',2,1,0,'convo','Reflect it back before you respond','say what they meant first, then answer'],
+['c25','CHA',3,1,0,'talk','5-minute talk to real humans','present anything, 2+ listeners'],
+['c26','CHA',1,0,1,'','Pause two full seconds before you answer','all day, the calm beat reads as certainty'],
+['c27','CHA',1,0,1,'','Cut the filler and the over-nodding','no \u201cuh-huh\u201d or \u201ctotally\u201d spam, stay contained'],
+['c28','CHA',1,0,1,'','Own your space: open posture, no fidgeting','unhurried, grounded, every interaction today'],
+['c29','CHA',2,1,0,'convo','Ask someone about the thing they love','stay curious past the point you\u2019d normally exit'],
+['i01','INT',1,1,1,'neet','One extra NeetCode','beyond today\u2019s study'],
+['i02','INT',2,1,0,'neet','Rebuild yesterday\u2019s NeetCode from a blank file','passes without peeking'],
+['i03','INT',1,1,0,'pwn','One extra pwn challenge','any dojo'],
+['i04','INT',1,0,1,'','Read a man page properly 20 min','one tool, fully'],
+['i05','INT',2,1,0,'ma','Math Academy +20 XP extra','beyond the daily goal'],
+['i06','INT',1,0,1,'','20 mental math problems','no paper'],
+['i07','INT',2,1,0,'neet','Write an algorithm from memory','sort or search, then verify'],
+['i08','INT',1,0,1,'','Regex kata 15 min','write 5 patterns, test them'],
+['i09','INT',1,0,1,'','SQL kata 15 min','5 queries against anything'],
+['i10','INT',2,1,0,'thm','One extra THM room','outside the path counts'],
+['i11','INT',1,0,1,'','Explain pointers in 5 lines','to an imaginary junior'],
+['i12','INT',1,0,1,'','Binary/hex conversion drill 10 min','speed rounds'],
+['i13','INT',2,1,0,'cs50','Debug an old snippet of yours','find one real flaw, fix it'],
+['i14','INT',2,1,0,'longform','Read one CS paper abstract+intro','5-line note'],
+['i15','INT',3,1,0,'neet','3 NeetCode, zero hints','one sitting'],
+['x01','',1,0,0,'','48h no shorts/reels','done = streak held'],
+['x02','',1,0,1,'','Digital sunset 22:00','screens off, tonight'],
+['x03','',1,0,0,'','Cook something new','recipe you\u2019ve never made'],
+['x04','',1,0,1,'','Declutter 20 min','one drawer, shelf, desktop'],
+['x05','',2,0,0,'','Plan the week on Sunday','30 min, on paper'],
+['x06','',1,0,1,'','Cold shower, full','2+ min, discipline rep, no stat']
+];
+
+const CHALLENGES=[
+['STR','h_s1','Century circuit','100 pushups + 100 squats + 50 rows, same day','train',70],
+['STR','h_s2','Loaded 5k walk','backpack 10kg+, one go','cardio',60],
+['STR','h_s3','Volume day: 20 hard sets','logged, real rest, real loads','train',80],
+['VIT','h_v1','10k run','any pace, one go','cardio',70],
+['VIT','h_v2','2k open-water swim','respect the sea, tell someone','swim',80],
+['VIT','h_v3','100 floors in a day','stairs only, counted','cardio',60],
+['INT','h_i1','3 NeetCode, no hints','one sitting, timer on','neet',70],
+['INT','h_i2','Full pwn module in a day','start to finish','pwn',80],
+['INT','h_i3','60-min timed math paper','MA topics, self-graded honestly','ma',60],
+['WIS','h_w1','100 pages + 1-page essay','same book, same day','read',70],
+['WIS','h_w2','Book-club-of-one: finish + full note','current book to done','read',80],
+['WIS','h_w3','10 rapid games, every one reviewed','the full session','chess',60],
+['CHA','h_c1','20 cold DMs with real personalization','no templates','outreach',70],
+['CHA','h_c2','Attend an event alone, 3 real conversations','names remembered','event',80],
+['CHA','h_c3','Give a 5-min talk and record it','watch it back after','talk',60]
+];
+
+const DIRECTIVES=[
+['d01','Iron Month','20 training sessions',20,'train'],
+['d02','Deep Shelf','Finish 2 books with notes',2,'bookdone'],
+['d03','Signal Sprint','Math Academy goal, 25 days',25,'ma'],
+['d04','Cold Protocol','20 full cold showers',20,'cold'],
+['d05','Sea Legs','8 swims',8,'swim'],
+['d06','Road Work','12 cardio sessions',12,'cardio'],
+['d07','Rook Rush','+100 rapid elo (manual ticks of +10)',10,''],
+['d08','First Light','10 sunrise walks',10,'sunrise'],
+['d09','Clean Feed','24 no-sugar days (tick daily)',24,''],
+['d10','Iron Mind','20 meditation sessions',20,'med'],
+['d11','Page Discipline','20 reading days',20,'read'],
+['d12','Step Standard','25 days over 8k steps (tick daily)',25,'']
+];
+
+const FILES=[
+['f01','FILE 001 — BOOT','First day closed clean.','A machine hums to life in a rented room above the port. It does not know yet what it is for.'],
+['f02','FILE 002 — FIRST GATE','Clear any Gate.','Doors in this city don\u2019t open for wanting. They open for proof.'],
+['f03','FILE 003 — FIRST BLOOD','Complete a Challenge.','The hard ones leave marks. The marks are the point.'],
+['f04','FILE 004 — THE OATH','Complete a Directive.','A month is long enough to become someone slightly different.'],
+['f05','FILE 005 — SEVEN','7-day streak.','Anyone can burn for a night. Seven is a signal.'],
+['f06','FILE 006 — THIRTY','30-day streak.','The Static hates you now. Good.'],
+['f07','FILE 007 — IRON 40','STR reaches 40.','The bar doesn\u2019t negotiate. That\u2019s why you like it.'],
+['f08','FILE 008 — WIRED 40','INT reaches 40.','Somewhere in the stack, the math stopped being a wall and became a door.'],
+['f09','FILE 009 — FIRST SHELF','Finish a book with a note.','Someone spent years writing it. You spent attention reading it. Fair trade.'],
+['f10','FILE 010 — SALT','First sea swim logged.','The Black Sea keeps its own ledger. You\u2019re in it now.'],
+['f11','FILE 011 — HUNDRED HOURS','100 Build hours.','Empires are boring up close. Hour after hour after hour.'],
+['f12','FILE 012 — FIRST 5K','Clear VIT Gate 20.','Lungs file a complaint. Overruled.'],
+['f13','FILE 013 — THE VOICE','First talk delivered.','Fear rode shotgun. You drove anyway.'],
+['f14','FILE 014 — LEVEL 10','Reach level 10.','The city starts to recognize your walk.'],
+['f15','FILE 015 — LEVEL 20','Reach level 20.','You stopped counting days a while ago. The system counts for you.'],
+['f16','FILE 016 — CLEAN SIGNAL','An Audit at 80%+.','A whole month, held. Frame it.'],
+['f17','FILE 017 — THE BREAKER','A Failsafe burns for you.','Everyone falls. The system is built for the getting up.'],
+['f18','FILE 018 — DOUBLE GATE','Clear two Gates in one month.','Momentum is a myth people tell about you afterward.'],
+['f19','FILE 019 — SUNRISE PROTOCOL','Hold the target wake time for a full week.','The city belongs to whoever is up before it.']
+];
+
+const CHROMES=[
+['ch1','SPARE DIE','+1 board reroll per day','Clear any Gate.',s=>gatesClearedCount(s)>=1],
+['ch2','FLOW STATE','+5% Build XP','Log 50 Build hours.',s=>s.totals.buildMin>=3000],
+['ch3','SECOND WIND','+1 Challenge reroll per week','Complete 6 Challenges.',s=>s.totals.challenges>=6],
+['ch4','BREAKER II','Failsafe recharges to 2/week','Survive a Failsafe burn, then hold a 14-day streak.',s=>s.totals.mercyBurns>=1&&s.bestStreak>=14],
+['ch5','SIDE HUSTLE','+10% side-quest XP','Complete 40 side quests.',s=>s.totals.quests>=40],
+['ch6','NIGHT SCHOOL','+10% Study XP','Earn 30 INT units.',s=>s.totals.units.INT>=30],
+['ch7','NOISE FILTER','Static decays 2 extra on clean days','Hold a 10-day streak.',s=>s.bestStreak>=10],
+['ch8','LEDGER HAND','+2 XP on every free log','Log 60 Ledger entries.',s=>s.totals.ledger>=60]
+];
+
+/* ================= UTILS ================= */
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+const todayStr=(d=new Date())=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parseDay=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c,12)};
+const dayNumber=s=>Math.round(parseDay(s).getTime()/86400000);
+const addDays=(s,n)=>{const d=parseDay(s);d.setDate(d.getDate()+n);return todayStr(d)};
+const mondayKey=s=>{const d=parseDay(s);const off=(d.getDay()+6)%7;d.setDate(d.getDate()-off);return todayStr(d)};
+const monthKey=s=>s.slice(0,7);
+const weekday=s=>parseDay(s).getDay();
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtMin=m=>{const h=Math.floor(m/60),mm=m%60;return h?h+'h'+(mm?' '+mm+'m':''):mm+'m'};
+const fmtHM=m=>pad(Math.floor(m/60))+':'+pad(m%60);
+const parseHM=v=>{const m=String(v||'').trim().match(/^(\d{1,2}):(\d{2})$/);if(!m)return null;const x=(+m[1])*60+(+m[2]);return x>=0&&x<1440?x:null};
+const nowHM=()=>{const n=new Date();return pad(n.getHours())+':'+pad(n.getMinutes())};
+const DOWN=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function rng(seed){let a=seed;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let audioCtx=null;
+function beep(f=660,d=.07,g=.04){try{audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),v=audioCtx.createGain();o.frequency.value=f;v.gain.value=g;o.connect(v);v.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+d)}catch(_){}}
+function toast(msg,gold){const t=document.createElement('div');t.className='toast'+(gold?' gold':'');t.textContent=msg;$('toasts').appendChild(t);setTimeout(()=>t.remove(),2600)}
+
+/* ================= STATE ================= */
+function defaultState(){
+  const t=todayStr();
+  return {
+    v:5, created:t, lastDay:t, xp:0,
+    bw:85, chessRating:0, maGoal:30,
+    sleep:null, waterGoal:8, lastExport:null,
+    sync:{token:null,gist:null,last:null},
+    stats:Object.fromEntries(STATS.map(k=>[k,{score:0,prog:0,cleared:0}])),
+    gatesLog:[],
+    schedule:{0:480,1:180,2:180,3:180,4:180,5:0,6:480},
+    trainPlan:{0:'Legs',1:'Push',2:'Pull',3:'Legs',4:'Push',5:'Rest',6:'Pull'},
+    live:null,
+    streak:0,bestStreak:0,shadow:12,
+    mercy:{week:mondayKey(t),available:1,burnedInfo:null},
+    sell:{week:mondayKey(t),outreach:0,posts:0,demos:0,quota:{outreach:3,posts:1,demos:1},paid:false},
+    weekly:{week:mondayKey(t),cardioMin:0,vitBonus:false,mobility:0,chess:0,longform:0,posts:0,challenges:0,chalReroll:0},
+    tracks:{ma:{course:'Foundations I',pct:0},pwn:{belt:'none',ch:0},neet:0,cs50:0,thm:0},
+    books:[],counters:{booksDone:0,reviews:0,demos:0,posts:0,talks:0,chaReps:0},
+    directive:{month:monthKey(t),options:[],locked:null},
+    bounties:[],bountyMonth:monthKey(t),audits:[],contracts:[],beacons:[],
+    chrome:{owned:[],installed:[]},files:[],
+    served:[],log:[],
+    totals:{buildMin:0,quests:0,challenges:0,ledger:0,mercyBurns:0,fullDays:0,dayCount:0,units:Object.fromEntries(STATS.map(k=>[k,0]))},
+    placed:false,
+    daily:freshDaily(t)
+  };
+}
+function freshDaily(day){return{day,train:null,restHonored:false,buildMin:0,buildBonus:false,note:'',
+  water:0,wake:null,sessions:[],
+  study:{ma:false,pick:null},units:Object.fromEntries(STATS.map(k=>[k,0])),read:false,review:false,
+  board:[],chal:null,doneQ:[],reroll:0,xp:0,mercyBanner:null}}
+let S=load();
+function load(){try{const r=localStorage.getItem(KEY);if(!r)return defaultState();const s=JSON.parse(r);return normalize(s)}catch(e){return defaultState()}}
+function normalize(s){const d=defaultState();for(const k in d)if(!(k in s))s[k]=d[k];
+  for(const k of STATS){if(!s.stats[k])s.stats[k]={score:0,prog:0,cleared:0};if(!(k in s.totals.units))s.totals.units[k]=0}
+  if(!s.daily)s.daily=freshDaily(s.lastDay);return s}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('SAVE FAILED — storage full?')}}
+
+/* ================= ENGINE ================= */
+function installed(id){return S.chrome.installed.includes(id)}
+function band(score){return Math.min(4,Math.floor(score/20))}
+function price(score){return PRICE[band(score)]}
+function nextGate(score){return Math.min(100,(Math.floor(score/20)+1)*20)}
+function atWall(st){const s=S.stats[st];return (s.score%20===19)&&s.cleared<nextGate(s.score)}
+function gatesClearedCount(s){return STATS.reduce((a,k)=>a+(s.stats[k].cleared/20),0)}
+function signalMult(){return S.shadow<20?1.1:S.shadow>=60?0.8:1}
+function awardXP(n,why){
+  if(installed('ch8')&&why==='ledger')n+=2;
+  n=n*signalMult();
+  const before=levelFromXP(S.xp).l;
+  S.xp+=Math.max(0,Math.round(n));S.daily.xp+=Math.max(0,Math.round(n));
+  const after=levelFromXP(S.xp).l;
+  if(after>before){beep(880,.12,.05);toast('LEVEL '+after+' — '+rankFor(after),true);checkFiles()}
+}
+function awardUnit(stat,n,src){
+  if(!stat||!STATS.includes(stat))return 0;
+  const cap=UCAP[stat],used=S.daily.units[stat];
+  const grant=Math.max(0,Math.min(n,cap-used));
+  const spill=n-grant;
+  if(spill>0)awardXP(spill*5,'spill');
+  if(grant<=0){return 0}
+  S.daily.units[stat]+=grant;S.totals.units[stat]+=grant;
+  const st=S.stats[stat];
+  for(let i=0;i<grant;i++){
+    if((st.score%20===19)&&st.cleared<nextGate(st.score)){
+      if(st.prog<price(st.score)){st.prog++;if(st.prog>=price(st.score))toast(stat+' AT GATE — proof required',true)}
+      else awardXP(5,'spill');
+      continue;
+    }
+    st.prog++;
+    if(st.prog>=price(st.score)){st.prog=0;st.score=Math.min(100,st.score+1);beep(740,.06);toast(stat+' → '+st.score,false);}
+  }
+  checkFiles();checkChrome();
+  return grant;
+}
+function clearGate(stat,gate,proof){
+  const st=S.stats[stat];
+  st.cleared=Math.max(st.cleared,gate);
+  if(st.score===gate-1&&st.prog>=price(st.score)){st.prog=0;st.score=gate}
+  else if(st.score<gate&&st.score===gate-1){/* keep */}
+  S.gatesLog.push({stat,gate,date:todayStr(),proof});
+  awardXP(100*(gate/20),'gate');
+  toast(stat+' GATE '+gate+' — '+GATES[stat][gate].n,true);beep(980,.15,.06);
+  checkFiles();checkChrome();save();syncPush(false);renderAll();
+}
+function checkFiles(){
+  const has=id=>S.files.includes(id);const add=id=>{if(!has(id)){S.files.push(id);const f=FILES.find(x=>x[0]===id);toast('FILE UNLOCKED — '+f[1],true);beep(520,.2,.05)}};
+  const monthGates=S.gatesLog.filter(g=>monthKey(g.date)===monthKey(todayStr())).length;
+  if(S.totals.fullDays>=1)add('f01');
+  if(gatesClearedCount(S)>=1)add('f02');
+  if(S.totals.challenges>=1)add('f03');
+  if(S.audits.some(a=>a.dirDone)||(S.directive.locked&&S.directive.locked.done))add('f04');
+  if(S.streak>=7||S.bestStreak>=7)add('f05');
+  if(S.streak>=30||S.bestStreak>=30)add('f06');
+  if(S.stats.STR.score>=40)add('f07');
+  if(S.stats.INT.score>=40)add('f08');
+  if(S.counters.booksDone>=1)add('f09');
+  if(S.log.some(d=>d.kinds&&d.kinds.includes('swim'))||S.daily.kindsSwim)add('f10');
+  if(S.totals.buildMin>=6000)add('f11');
+  if(S.stats.VIT.cleared>=20)add('f12');
+  if(S.counters.talks>=1)add('f13');
+  if(levelFromXP(S.xp).l>=10)add('f14');
+  if(levelFromXP(S.xp).l>=20)add('f15');
+  if(S.audits.some(a=>a.pct>=80))add('f16');
+  if(S.totals.mercyBurns>=1)add('f17');
+  if(monthGates>=2)add('f18');
+  if(S.sleep&&S.sleep.cur===S.sleep.goal&&S.sleep.held>=7)add('f19');
+}
+function checkChrome(){
+  for(const c of CHROMES){if(!S.chrome.owned.includes(c[0])&&c[4](S)){S.chrome.owned.push(c[0]);toast('CHROME MINTED — '+c[1],true)}}
+}
+
+/* ---------- board dealing ---------- */
+function scaleText(t,stat){
+  const s=S.stats[stat]?S.stats[stat].score:0;let n=10;
+  if(/pushups/i.test(t))n=20+Math.round(1.5*S.stats.STR.score);
+  else if(/squats|lunges/i.test(t))n=25+2*S.stats.STR.score;
+  else if(/hang|sit|Plank/i.test(t))n=45+3*S.stats.STR.score;
+  else if(/rounds/i.test(t))n=3+Math.floor(S.stats.STR.score/12);
+  else if(/ladder to/i.test(t))n=4+Math.floor(S.stats.STR.score/10);
+  else if(/4×/.test(t))n=8+Math.floor(S.stats.STR.score/6);
+  else if(/run {n} min|rope {n} min/i.test(t)||/{n} min/.test(t))n=20+Math.floor(S.stats.VIT.score/2);
+  return t.replace('{n}',n);
+}
+function questXP(q){const base=[0,12,24,48][q.r]||12;let x=base+ (q.r===3?6:0);if(installed('ch5'))x=Math.round(x*1.1);return x}
+function dealBoard(day){
+  const seed=hashStr(day+'|board');const R=rng(seed);
+  const recent=new Set(S.served.slice(-30));
+  const pool=DECK.filter(d=>!recent.has(d[0]));
+  const pick=(flt)=>{
+    let cand=pool.filter(flt);if(!cand.length)cand=DECK.filter(flt);if(!cand.length)cand=pool.length?pool:DECK;
+    // rarity weights
+    const roll=R();let want=roll<0.65?1:roll<0.92?2:3;
+    let sub=cand.filter(c=>c[2]===want);if(!sub.length)sub=cand;
+    return sub[Math.floor(R()*sub.length)];
+  };
+  const out=[];const usedStats=new Set();let rares=0,quick=0;
+  for(let i=0;i<4;i++){
+    const q=pick(c=>!out.some(o=>o[0]===c[0])
+      &&(rares<1||c[2]<3)
+      &&(i<3||usedStats.size>=3||!usedStats.has(c[1])||c[1]==='')
+      &&(i<3||quick>=1||c[4]===1));
+    out.push(q);usedStats.add(q[1]);if(q[2]===3)rares++;if(q[4])quick++;
+  }
+  S.served.push(...out.map(o=>o[0]));S.served=S.served.slice(-60);
+  return out.map(o=>({id:o[0],stat:o[1],r:o[2],u:o[3],kind:o[5],name:scaleText(o[6],o[1]),sub:o[7]}));
+}
+function dealChallenge(day){
+  const stat=STATS[dayNumber(day)%5];
+  const opts=CHALLENGES.filter(c=>c[0]===stat);
+  const c=opts[Math.floor(rng(hashStr(day+'|chal'))()*opts.length)];
+  return{id:c[1],stat,name:c[2],sub:c[3],kind:c[4],xp:c[5]};
+}
+function rollDirectiveOptions(mk){
+  const R=rng(hashStr(mk+'|dir'));const idx=new Set();
+  while(idx.size<3)idx.add(Math.floor(R()*DIRECTIVES.length));
+  return[...idx].map(i=>{const d=DIRECTIVES[i];return{id:d[0],title:d[1],desc:d[2],target:d[3],link:d[4]}});
+}
+
+/* ---------- rollover ---------- */
+function fullDayMinimums(day,d){
+  const miss=[];
+  const plan=S.trainPlan[weekday(day)]||'Rest';
+  if(plan==='Rest'){if(!d.restHonored&&!d.train)miss.push('TRAIN')}
+  else if(!d.train)miss.push('TRAIN');
+  const tgt=S.schedule[weekday(day)]||0;
+  if(tgt>0&&d.buildMin<tgt)miss.push('BUILD');
+  if(!d.study.ma)miss.push('STUDY');
+  return miss;
+}
+function closeDay(d){
+  const day=d.day;
+  // mercy keyed to the week of the day being closed (fix #1)
+  if(S.mercy.week!==mondayKey(day)){S.mercy={week:mondayKey(day),available:installed('ch4')?2:1,burnedInfo:null}}
+  const miss=fullDayMinimums(day,d);
+  let full=miss.length===0;
+  if(!full&&S.mercy.available>0){
+    S.mercy.available--;S.totals.mercyBurns++;
+    S.mercy.burnedInfo={covered:day,missed:miss.join(' · ')};
+    full=true;
+  }
+  if(full){
+    S.streak++;S.bestStreak=Math.max(S.bestStreak,S.streak);S.totals.fullDays++;
+    let heal=15+(installed('ch7')?2:0);
+    S.shadow=Math.max(0,S.shadow-heal);
+  }else{
+    S.streak=0;S.shadow=Math.min(100,S.shadow+8*miss.length);
+  }
+  S.totals.dayCount++;
+  S.log.unshift({day,full,miss,buildMin:d.buildMin,note:d.note,xp:d.xp,
+    units:d.units,quests:d.doneQ.length,train:d.train?d.train.type:(d.restHonored?'Rest':null),
+    kinds:d.kindsList||[],sessions:d.sessions||[],wake:d.wake||null});
+  S.log=S.log.slice(0,1100);
+  if(S.sleep&&!d.wake){const sl=S.sleep;sl.miss5.push(false);sl.miss5=sl.miss5.slice(-5);
+    if(sl.miss5.filter(x=>!x).length>=3){sl.cur=Math.min(sl.start,sl.cur+20);sl.held=0;sl.miss5=[];}}
+  S.debrief={day,full,miss,burn:!!(S.mercy.burnedInfo&&S.mercy.burnedInfo.covered===day),
+    xp:d.xp,buildMin:d.buildMin,units:{...d.units},quests:d.doneQ.length,chal:!!d.chalDone,
+    note:d.note,streak:S.streak,shadow:S.shadow,gaps:0};
+}
+function closeStaleLive(today){
+  if(!S.live)return;
+  const startDay=S.live.day;
+  if(startDay!==today){
+    // credit a conservative capped session to its start day, then close
+    if(S.daily.day===startDay){const cr=Math.min(720,Math.max(15,Math.round((Date.now()-S.live.since)/60000)));logBuildMinutes(cr,true)}
+    S.live=null;toast('Stale JACK IN closed');
+  }
+}
+function processRollovers(){
+  const today=todayStr();
+  if(S.daily.day===today)return;
+  closeStaleLive(today);
+  // close the daily we have
+  closeDay(S.daily);
+  // gap days between
+  let cur=addDays(S.daily.day,1);let guard=0;
+  while(cur!==today&&guard<90){
+    const gd=freshDaily(cur);
+    if(S.mercy.week!==mondayKey(cur)){S.mercy={week:mondayKey(cur),available:installed('ch4')?2:1,burnedInfo:null}}
+    if(S.mercy.available>0){S.mercy.available--;S.totals.mercyBurns++;S.mercy.burnedInfo={covered:cur,missed:'gap day'};
+      S.streak++;S.bestStreak=Math.max(S.bestStreak,S.streak);S.totals.fullDays++;}
+    else{S.streak=0;S.shadow=Math.min(100,S.shadow+12)}
+    S.totals.dayCount++;
+    S.log.unshift({day:cur,full:S.mercy.burnedInfo&&S.mercy.burnedInfo.covered===cur,miss:['gap'],buildMin:0,note:'',xp:0,units:{},quests:0,train:null,kinds:[]});
+    cur=addDays(cur,1);guard++;
+  }
+  if(S.debrief&&guard>0)S.debrief.gaps=guard;
+  // weekly resets (current week context)
+  if(S.weekly.week!==mondayKey(today)){
+    S.weekly={week:mondayKey(today),cardioMin:0,vitBonus:false,mobility:0,chess:0,longform:0,posts:0,challenges:0,chalReroll:0};
+  }
+  if(S.sell.week!==mondayKey(today)){
+    S.sell.week=mondayKey(today);S.sell.outreach=0;S.sell.posts=0;S.sell.demos=0;S.sell.paid=false;
+  }
+  if(S.mercy.week!==mondayKey(today)){S.mercy={week:mondayKey(today),available:installed('ch4')?2:1,burnedInfo:S.mercy.burnedInfo}}
+  // month rollover → audit + directive
+  const mkPrev=monthKey(S.daily.day),mkNow=monthKey(today);
+  if(mkPrev!==mkNow){
+    const monthDays=S.log.filter(l=>monthKey(l.day)===mkPrev);
+    const fulls=monthDays.filter(l=>l.full).length;
+    const pct=monthDays.length?Math.round(100*fulls/monthDays.length):0;
+    const title=pct>=80?'CLEAN SIGNAL':pct>=60?'HELD THE LINE':pct>=40?'IN THE STATIC':'SIGNAL LOST';
+    const bDone=S.bounties.filter(b=>b.done).length;
+    const dl=S.directive.locked;
+    S.audits.unshift({month:mkPrev,pct,title,bounties:bDone+'/'+S.bounties.length,
+      dirTitle:dl?dl.title:'—',dirDone:!!(dl&&dl.done),challenges:S.totals.challenges,units:{...S.totals.units}});
+    S.audits=S.audits.slice(0,12);
+    S.bounties=[];S.bountyMonth=mkNow;
+    S.directive={month:mkNow,options:rollDirectiveOptions(mkNow),locked:null};
+    toast('AUDIT FILED — '+title,true);
+  }
+  if(!S.directive.options.length&&!S.directive.locked)S.directive.options=rollDirectiveOptions(monthKey(today));
+  // new day
+  S.daily=freshDaily(today);
+  S.daily.board=dealBoard(today);
+  S.daily.chal=dealChallenge(today);
+  if(S.mercy.burnedInfo)S.daily.mercyBanner=S.mercy.burnedInfo;
+  S.mercy.burnedInfo=null;
+  S.lastDay=today;
+  checkFiles();save();
+  syncPush(false);
+}
+
+/* ---------- ledger core ---------- */
+function trackWeeklyKindCaps(kind){
+  const w=S.weekly;
+  if(kind==='mobility'){if(w.mobility>=2)return false;w.mobility++;return true}
+  if(kind==='chess'){if(w.chess>=4)return false;w.chess++;return true}
+  if(kind==='longform'){if(w.longform>=2)return false;w.longform++;return true}
+  if(kind==='post'){if(w.posts>=2)return false;w.posts++;return true}
+  if(kind==='read'){if(S.daily.read)return false;S.daily.read=true;return true}
+  if(kind==='review'){if(S.daily.review)return false;S.daily.review=true;return true}
+  return true;
+}
+function ledgerAdd(kind,opts={}){
+  const K=KINDS[kind];if(!K)return;
+  const[label,stat,units,xp]=K;
+  let unitOK=units>0;
+  if(unitOK)unitOK=trackWeeklyKindCaps(kind);
+  let granted=0;
+  if(unitOK)granted=awardUnit(stat,units,kind);
+  let gain=xp;
+  if(opts.size)gain=XP.free[opts.size]||xp;
+  if(kind==='train'&&opts.progressed)gain+=XP.prog;
+  if(installed('ch6')&&['ma','pwn','neet','cs50','thm'].includes(kind))gain=Math.round(gain*1.1);
+  awardXP(gain,'ledger');
+  S.totals.ledger++;
+  // side effects
+  if(kind==='train'){S.daily.train={type:opts.type||'Session',progressed:!!opts.progressed}}
+  if(kind==='ma')S.daily.study.ma=true;
+  if(['pwn','neet','cs50','thm'].includes(kind)){S.daily.study.pick=kind;
+    if(kind==='neet')S.tracks.neet++;if(kind==='pwn')S.tracks.pwn.ch++;}
+  if(['cardio','swim','sport'].includes(kind))S.weekly.cardioMin+=(opts.min||30);
+  if(kind==='swim'){S.daily.kindsSwim=true}
+  if(kind==='demo'){S.sell.demos++;S.counters.demos++;S.counters.chaReps+=2}
+  if(kind==='outreach'){S.sell.outreach++;S.counters.chaReps++}
+  if(kind==='post'){S.sell.posts++;S.counters.posts++;S.counters.chaReps++}
+  if(kind==='talk'){S.counters.talks++;S.counters.chaReps+=3}
+  if(['event','convo'].includes(kind))S.counters.chaReps+=(kind==='event'?2:1);
+  if(kind==='review')S.counters.reviews++;
+  (S.daily.kindsList=S.daily.kindsList||[]).push(kind);
+  // weekly VIT bonus
+  if(!S.weekly.vitBonus&&S.weekly.cardioMin>=150){S.weekly.vitBonus=true;awardUnit('VIT',1,'weekly-bonus');toast('VIT weekly bonus — 150 min banked')}
+  // sell quota
+  const q=S.sell.quota;
+  if(!S.sell.paid&&S.sell.outreach>=q.outreach&&S.sell.posts>=q.posts&&S.sell.demos>=q.demos){
+    S.sell.paid=true;awardXP(XP.quota,'quota');toast('SELL QUOTA MET +'+XP.quota+' XP',true)}
+  // directive auto-link
+  const dl=S.directive.locked;
+  if(dl&&!dl.done&&dl.link===kind){dl.count++;if(dl.count>=dl.target){dl.done=true;awardXP(XP.dir,'dir');toast('DIRECTIVE COMPLETE — '+dl.title,true)}}
+  const uTxt=granted>0?(' · +'+granted+' '+stat+' unit'+(granted>1?'s':'')):(units>0&&!unitOK?' · cap reached (XP only)':'');
+  toast(label+' +'+gain+' XP'+uTxt);
+  save();renderAll();
+}
+
+/* ================= ACTIONS ================= */
+window.tab=v=>{document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));$('v-'+v).classList.add('on');
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));window.scrollTo(0,0);renderAll()};
+
+let liveTick=null;
+window.jackIn=()=>{if(S.live)return;S.live={since:Date.now(),day:todayStr()};save();renderAll();toast('JACK IN — Score running')};
+window.jackOut=()=>{
+  if(!S.live)return;
+  const mins=Math.min(720,Math.max(1,Math.round((Date.now()-S.live.since)/60000)));
+  S.live=null;
+  logBuildMinutes(mins,false);
+  S._pend=mins;
+  openNoteSheet();
+};
+function pushSession(n){
+  (S.daily.sessions=S.daily.sessions||[]).push({t:nowHM(),m:S._pend||0,n:n||''});
+  S._pend=0;
+  S.daily.note=(S.daily.sessions||[]).map(s=>s.n).filter(Boolean).join('\n');
+}
+function logBuildMinutes(mins,silent){
+  const before=S.daily.buildMin;
+  S.daily.buildMin=Math.max(0,Math.min(960,S.daily.buildMin+mins));
+  const added=S.daily.buildMin-before;
+  S.totals.buildMin+=Math.max(0,added);
+  let gain=Math.round(added*XP.hour/60);
+  if(installed('ch2'))gain=Math.round(gain*1.05);
+  awardXP(gain,'build');
+  const tgt=S.schedule[weekday(S.daily.day)]||0;
+  if(tgt>0&&!S.daily.buildBonus&&S.daily.buildMin>=tgt){S.daily.buildBonus=true;awardXP(XP.target,'target');toast('BUILD TARGET HIT +'+XP.target,true)}
+  if(!silent)toast('SCORE +'+fmtMin(Math.max(0,added))+' · +'+gain+' XP');
+  checkFiles();checkChrome();save();renderAll();
+}
+window.scoreAdj=m=>{if(m>0)logBuildMinutes(m,false);else{
+  const before=S.daily.buildMin;S.daily.buildMin=Math.max(0,S.daily.buildMin+m);
+  const removed=before-S.daily.buildMin;S.totals.buildMin=Math.max(0,S.totals.buildMin-removed);
+  S.xp=Math.max(0,S.xp-Math.round(removed*XP.hour/60));
+  const tgt=S.schedule[weekday(S.daily.day)]||0;
+  if(S.daily.buildBonus&&tgt>0&&S.daily.buildMin<tgt){S.daily.buildBonus=false;S.xp=Math.max(0,S.xp-XP.target);toast('Target bonus revoked')}
+  save();renderAll()}};
+
+window.honorRest=()=>{S.daily.restHonored=true;awardXP(6,'rest');toast('Rest honored — recovery is training');save();renderAll()};
+window.questDone=(i)=>{
+  const q=S.daily.board[i];if(!q||S.daily.doneQ.includes(q.id))return;
+  S.daily.doneQ.push(q.id);S.totals.quests++;
+  awardXP(questXP(q),'quest');
+  if(q.u)awardUnit(q.stat,1,'quest');
+  if(q.kind&&KINDS[q.kind]){/* side-effects only for directive/sell linkage */
+    const dl=S.directive.locked;
+    if(dl&&!dl.done&&dl.link===q.kind){dl.count++;if(dl.count>=dl.target){dl.done=true;awardXP(XP.dir,'dir');toast('DIRECTIVE COMPLETE — '+dl.title,true)}}
+    if(['cardio','swim','sport'].includes(q.kind))S.weekly.cardioMin+=30;
+    if(q.kind==='swim')S.daily.kindsSwim=true;
+    (S.daily.kindsList=S.daily.kindsList||[]).push(q.kind);
+  }
+  beep(700,.06);toast('SIDE QUEST +'+questXP(q)+' XP');
+  checkFiles();checkChrome();save();renderAll();
+};
+window.chalDone=()=>{
+  const c=S.daily.chal;if(!c||S.daily.chalDone)return;
+  S.daily.chalDone=true;S.totals.challenges++;S.weekly.challenges++;
+  awardXP(c.xp,'chal');awardUnit(c.stat,2,'challenge');
+  const dl=S.directive.locked;
+  if(dl&&!dl.done&&dl.link===c.kind){dl.count++;if(dl.count>=dl.target){dl.done=true;awardXP(XP.dir,'dir');toast('DIRECTIVE COMPLETE — '+dl.title,true)}}
+  toast('CHALLENGE CLEARED +'+c.xp+' XP',true);beep(900,.14,.06);
+  checkFiles();checkChrome();save();renderAll();
+};
+window.rerollBoard=()=>{
+  const max=1+(installed('ch1')?1:0);
+  if(S.daily.reroll>=max){toast('No rerolls left today');return}
+  S.daily.reroll++;S.daily.board=dealBoard(S.daily.day+'|r'+S.daily.reroll);save();renderAll();toast('Board rerolled');
+};
+window.rerollChal=()=>{
+  const max=1+(installed('ch3')?1:0);
+  if(S.weekly.chalReroll>=max){toast('No Challenge rerolls this week');return}
+  S.weekly.chalReroll++;S.daily.chal=dealChallenge(S.daily.day+'|c'+S.weekly.chalReroll);S.daily.chalDone=false;save();renderAll();
+};
+
+/* ---- sleep ladder + water ---- */
+window.setupSleep=()=>{
+  const cur=parseHM(prompt('What time do you ACTUALLY wake now, on average? (HH:MM)','08:30'));
+  if(cur===null){toast('Format HH:MM');return}
+  const goal=parseHM(prompt('Target wake time:','06:30'));
+  if(goal===null){toast('Format HH:MM');return}
+  if(cur<=goal){S.sleep={goal,cur:goal,start:goal,held:0,miss5:[]};toast('Already at target — now hold it');}
+  else{S.sleep={goal,cur,start:cur,held:0,miss5:[]};
+    toast('LADDER SET — first step: wake '+fmtHM(cur)+', lights-down '+fmtHM(Math.max(0,cur-465)),true)}
+  save();renderAll();
+};
+window.wakeConfirm=()=>{
+  const sl=S.sleep;if(!sl)return;const d=S.daily;
+  if(d.wake){toast('Already confirmed today');return}
+  const n=new Date();const mins=n.getHours()*60+n.getMinutes();
+  if(mins<240){toast('Before 04:00 doesn\u2019t count — go back to sleep');return}
+  if(mins>sl.cur+25){toast('Window closed ('+fmtHM(sl.cur)+' +25m). Tomorrow.');return}
+  d.wake=fmtHM(mins);
+  sl.miss5.push(true);sl.miss5=sl.miss5.slice(-5);
+  awardXP(12,'sleep');waterAdd(true);
+  if(sl.cur>sl.goal){
+    sl.held++;
+    if(sl.held>=3){sl.cur=Math.max(sl.goal,sl.cur-20);sl.held=0;
+      awardXP(25,'phase');beep(880,.15,.05);
+      toast(sl.cur===sl.goal?'FINAL STEP — wake '+fmtHM(sl.cur)+'. Now hold it.':'PHASE ADVANCE — wake '+fmtHM(sl.cur),true)}
+  }else{sl.held++;if(sl.held===7){toast('TARGET HELD — 7 mornings at '+fmtHM(sl.goal),true)}}
+  checkFiles();save();renderAll();
+};
+window.waterAdd=(auto)=>{
+  const d=S.daily;const g=S.waterGoal||8;
+  d.water=(d.water||0)+1;
+  if(d.water===g){awardXP(10,'water');toast('HYDRATED — '+g+'/'+g)}
+  save();if(!auto)renderAll();
+};
+
+/* ---- sheet plumbing ---- */
+function openSheet(html){$('sheet').innerHTML=html;$('shroud').classList.add('on');$('sheet').classList.add('on')}
+window.closeSheet=()=>{$('shroud').classList.remove('on');$('sheet').classList.remove('on')};
+window.openNoteSheet=()=>{
+  openSheet(`<h3>${S._pend?'Jacked out — '+fmtMin(S._pend):'Ship note'}</h3><div class="sub">One to three lines — what did you actually move? Future-you reads these.</div>
+  <div class="frow"><textarea id="note-t" rows="3" placeholder="e.g. webhook handler idempotency, wrote retry queue"></textarea></div>
+  <div class="sheet-actions"><button class="btn sec" onclick="skipNote()">Skip</button>
+  <button class="btn" onclick="saveNote()">Save note</button></div>`);
+};
+window.skipNote=()=>{if(S._pend)pushSession('');save();closeSheet();renderAll()};
+window.saveNote=()=>{const txt=($('note-t').value||'').trim();pushSession(txt);
+  save();closeSheet();renderAll();if(txt)toast('Logged to ship log')};
+
+/* ---- train sheet ---- */
+window.openTrain=()=>{
+  const plan=S.trainPlan[weekday(S.daily.day)]||'Rest';
+  openSheet(`<h3>Log training</h3><div class="sub">≥45 min with a progression attempt = 1 STR unit. Cardio types go through + Log.</div>
+  <div class="frow"><label>Type</label><div class="seg" id="tt">
+    ${['Push','Pull','Legs','Full','Other'].map(t=>`<button class="${t===plan?'on':''}" onclick="segPick(this)">${t}</button>`).join('')}
+  </div></div>
+  <div class="frow"><label>Progressed vs last same-type?</label><div class="seg" id="tp">
+    <button class="on" onclick="segPick(this)">Yes</button><button onclick="segPick(this)">No</button></div></div>
+  <div class="frow"><label>PR? (optional)</label><input id="tpr" placeholder="e.g. bench 82.5×5"></div>
+  <div class="sheet-actions"><button class="btn sec" onclick="closeSheet()">Cancel</button>
+  <button class="btn acc" onclick="submitTrain()">Log session</button></div>`);
+};
+window.segPick=b=>{[...b.parentNode.children].forEach(x=>x.classList.remove('on'));b.classList.add('on')};
+window.submitTrain=()=>{
+  const type=document.querySelector('#tt .on').textContent;
+  const prog=document.querySelector('#tp .on').textContent==='Yes';
+  const pr=$('tpr').value.trim();
+  closeSheet();ledgerAdd('train',{type,progressed:prog});
+  if(pr){S._pend=0;pushSession('PR: '+pr);save();toast('PR logged — test it at the Gate',true)}
+};
+
+/* ---- ledger sheet ---- */
+window.openLedger=()=>{
+  const groups={'Body':['train','cardio','swim','sport','mobility','cold','sunrise'],
+    'Mind':['read','chess','review','longform','med'],
+    'Study':['ma','pwn','neet','cs50','thm'],
+    'People / Sell':['demo','outreach','post','event','convo','talk'],
+    'Other':['custom']};
+  let html=`<h3>Ledger — log anything</h3><div class="sub">Source of truth. Board didn\u2019t roll it? Doesn\u2019t matter — if it\u2019s real, log it.</div>`;
+  for(const g in groups){
+    html+=`<div class="glbl" style="margin:12px 0 4px">${g}</div><div class="card" style="margin-bottom:4px">`;
+    for(const k of groups[g]){const K=KINDS[k];
+      html+=`<button class="list-btn" onclick="ledgerPick('${k}')"><span>${K[0]}<small>${K[4]}</small></span>
+      <span class="r">${K[2]?('▲'+K[1]+' · '):''}+${K[3]}xp</span></button>`}
+    html+='</div>';
+  }
+  html+=`<div class="sheet-actions"><button class="btn sec" onclick="closeSheet()">Close</button></div>`;
+  openSheet(html);
+};
+window.ledgerPick=k=>{
+  closeSheet();
+  if(k==='train'){openTrain();return}
+  if(['cardio','swim','sport'].includes(k)){
+    openSheet(`<h3>${KINDS[k][0]}</h3><div class="sub">Minutes matter for the weekly 150-min VIT bonus. Bigger effort = more XP, same 1 unit.</div>
+    <div class="frow"><label>Size</label><div class="seg" id="sz">
+    <button onclick="segPick(this)">S · ~30m</button><button class="on" onclick="segPick(this)">M · ~45m</button><button onclick="segPick(this)">L · 60m+</button></div></div>
+    <div class="sheet-actions"><button class="btn sec" onclick="closeSheet()">Cancel</button>
+    <button class="btn acc" onclick="submitSized('${k}')">Log</button></div>`);return;
+  }
+  ledgerAdd(k,{});
+};
+window.submitSized=k=>{
+  const t=document.querySelector('#sz .on').textContent[0];
+  const min=t==='S'?30:t==='M'?45:70;
+  closeSheet();ledgerAdd(k,{size:t,min});
+};
+
+/* ---- study buttons ---- */
+window.maDone=()=>{if(S.daily.study.ma){toast('Already logged today');return}ledgerAdd('ma',{})};
+window.pickStudy=k=>{ledgerAdd(k,{})};
+
+/* ---- gates ---- */
+window.openGate=(stat)=>{
+  const st=S.stats[stat];
+  const gate=Math.min(100,st.cleared+20);
+  const G=GATES[stat][gate];if(!G){toast(stat+' is capped');return}
+  if(G.t==='lifts'){
+    openSheet(`<h3>${stat} GATE ${gate} — ${G.n}</h3><div class="sub">${G.d}. Bodyweight ${S.bw}kg (edit in Settings). Enter today\u2019s tested or e1RM numbers.</div>
+    <div class="frow"><label>Squat kg</label><input id="g-sq" type="number" inputmode="decimal"></div>
+    <div class="frow"><label>Bench kg</label><input id="g-be" type="number" inputmode="decimal"></div>
+    <div class="frow"><label>Deadlift kg</label><input id="g-dl" type="number" inputmode="decimal"></div>
+    <div class="sheet-actions"><button class="btn sec" onclick="closeSheet()">Cancel</button>
+    <button class="btn acc" onclick="submitLiftGate('${stat}',${gate})">Verify</button></div>`);
+  }else if(G.t==='vit'){
+    const paths=[];
+    if(G.p.k5)paths.push(['k5','5k']);if(G.p.k10)paths.push(['k10','10k']);if(G.p.half)paths.push(['half','Half']);if(G.p.swim)paths.push(['swim','Swim']);
+    openSheet(`<h3>VIT GATE ${gate} — ${G.n}</h3><div class="sub">${G.d}. Any one path clears it.</div>
+    <div class="frow"><label>Path</label><div class="seg" id="g-path">${paths.map((o,i)=>`<button class="${i===0?'on':''}" data-v="${o[0]}" onclick="segPick(this);vitPathUI()">${o[1]}</button>`).join('')}</div></div>
+    <div class="frow" id="g-time-row"><label>Time (mm:ss or h:mm:ss)</label><input id="g-time" placeholder="27:40"></div>
+    <div class="frow" id="g-swim-row" style="display:none"><label>Type CONFIRM — ${G.p.swim||''}</label><input id="g-swim" autocapitalize="characters"></div>
+    <div class="sheet-actions"><button class="btn sec" onclick="closeSheet()">Cancel</button>
+    <button class="btn acc" onclick="submitVitGate(${gate})">Verify</button></div>`);
+  }else if(G.t==='wis'){
+    const gd=GATES.WIS[gate];
+    openSheet(`<h3>WIS GATE ${gate} — ${G.n}</h3><div class="sub">${G.d}</div>
+    <div class="sub">Books w/ notes so far: <b class="num">${S.counters.booksDone}</b> / ${gd.b} · Chess rating: <b class="num">${S.chessRating||'—'}</b> / ${gd.c} (edit in Settings)</div>
+    <div class="sheet-actions"><button class="btn sec" onclick="closeSheet()">Cancel</button>
+    <button class="btn acc" onclick="submitWisGate(${gate})">Verify</button></div>`);
+  }else{
+    openSheet(`<h3>${stat} GATE ${gate} — ${G.n}</h3><div class="sub">All of it, honestly:</div>
+    <div class="sub" style="color:var(--ink)">${G.d}</div>
+    <div class="frow"><label>Proof note (what/where)</label><input id="g-proof" placeholder="links, cert IDs, repo…"></div>
+    <div class="frow"><label>Type CONFIRM to attest every item is done</label><input id="g-conf" autocapitalize="characters"></div>
+    <div class="sheet-actions"><button class="btn sec" onclick="closeSheet()">Cancel</button>
+    <button class="btn acc" onclick="submitListGate('${stat}',${gate})">Clear Gate</button></div>`);
+  }
+};
+window.submitLiftGate=(stat,gate)=>{
+  const sq=+($('g-sq').value||0),be=+($('g-be').value||0),dl=+($('g-dl').value||0);
+  const r=GATES[stat][gate].r;const bw=S.bw||80;
+  const hits=[sq>=r.sq*bw,be>=r.be*bw,dl>=r.dl*bw].filter(Boolean).length;
+  if(hits>=2){closeSheet();clearGate(stat,gate,`sq${sq}/be${be}/dl${dl} @bw${bw}`)}
+  else toast(hits+'/3 at standard — need 2. The bar says not yet.');
+};
+function parseTimeStr(v){const p=String(v).trim().split(':').map(Number);if(!p.length||p.some(isNaN))return null;
+  if(p.length===2)return p[0]*60+p[1];if(p.length===3)return p[0]*3600+p[1]*60+p[2];return null}
+window.vitPathUI=()=>{const b=document.querySelector('#g-path .on');if(!b)return;const p=b.dataset.v;
+  $('g-time-row').style.display=p==='swim'?'none':'';$('g-swim-row').style.display=p==='swim'?'':'none'};
+window.submitVitGate=(gate)=>{
+  const G=GATES.VIT[gate];const b=document.querySelector('#g-path .on');const p=b?b.dataset.v:'k5';
+  if(p==='swim'){
+    if(($('g-swim').value||'').trim().toUpperCase()!=='CONFIRM'){toast('Type CONFIRM to attest');return}
+    closeSheet();clearGate('VIT',gate,'swim: '+G.p.swim);return;
+  }
+  const raw=$('g-time').value||'';const sec=parseTimeStr(raw);
+  if(sec===null){toast('Format mm:ss (or h:mm:ss for the half)');return}
+  if(p==='k5'&&sec<780){toast('Under 13:00 is world-record pace — that\u2019s total time, not min/km');return}
+  if(sec<=G.p[p]){closeSheet();clearGate('VIT',gate,({k5:'5k ',k10:'10k ',half:'half '})[p]+raw)}
+  else toast(raw+' — not under the line yet. Log it, come back stronger.');
+};
+window.submitWisGate=(gate)=>{
+  const gd=GATES.WIS[gate];
+  if(S.counters.booksDone>=gd.b||(S.chessRating||0)>=gd.c){closeSheet();clearGate('WIS',gate,'books '+S.counters.booksDone+' / rating '+S.chessRating)}
+  else toast('Neither path met yet — '+S.counters.booksDone+'/'+gd.b+' books, '+(S.chessRating||0)+'/'+gd.c+' rating');
+};
+window.submitListGate=(stat,gate)=>{
+  if($('g-conf').value.trim().toUpperCase()!=='CONFIRM'){toast('Type CONFIRM to attest');return}
+  const p=$('g-proof').value.trim();closeSheet();clearGate(stat,gate,p||'attested');
+};
+
+/* ---- directive ---- */
+window.lockDirective=(i)=>{
+  const o=i<0?null:S.directive.options[i];
+  if(i<0){
+    const t=prompt('Custom directive title:');if(!t)return;
+    const n=+prompt('Target count for the month:','20');if(!n)return;
+    S.directive.locked={id:'custom',title:t,desc:t,target:n,link:'',count:0,done:false};
+  }else{
+    S.directive.locked={...o,count:0,done:false};
+  }
+  S.directive.options=[];save();renderAll();toast('DIRECTIVE LOCKED — '+S.directive.locked.title,true);
+};
+window.dirTick=()=>{
+  const d=S.directive.locked;if(!d||d.done)return;
+  d.count++;if(d.count>=d.target){d.done=true;awardXP(XP.dir,'dir');toast('DIRECTIVE COMPLETE — '+d.title,true);checkFiles()}
+  save();renderAll();
+};
+
+/* ---- bounties / contracts ---- */
+window.addBounty=()=>{
+  if(S.bounties.length>=3){toast('3 bounties max this month');return}
+  const t=prompt('Bounty (a real month-scale target):');if(!t)return;
+  let x=+prompt('XP on close (50–600):','150')||150;x=Math.max(50,Math.min(600,x));
+  S.bounties.push({t,x,done:false});save();renderAll();
+};
+window.closeBounty=i=>{const b=S.bounties[i];if(!b||b.done)return;b.done=true;awardXP(b.x,'bounty');toast('BOUNTY CLOSED +'+b.x,true);save();renderAll()};
+window.addContract=()=>{
+  const t=prompt('Contract:');if(!t)return;
+  const k=(prompt('Tier — ERRAND / JOB / HEIST:','ERRAND')||'ERRAND').toUpperCase();
+  const tier=XP.contract[k]?k:'ERRAND';
+  S.contracts.push({t,tier,done:false});save();renderAll();
+};
+window.doneContract=i=>{const c=S.contracts[i];if(!c||c.done)return;c.done=true;awardXP(XP.contract[c.tier],'contract');save();renderAll()};
+
+/* ---- books ---- */
+window.addBook=()=>{const t=prompt('Book title:');if(!t)return;S.books.push({t,pct:0,done:false});save();renderAll()};
+window.bookPct=i=>{const b=S.books[i];if(!b||b.done)return;const p=+prompt('Progress % for “'+b.t+'”:',b.pct);if(isNaN(p))return;b.pct=Math.max(0,Math.min(100,p));save();renderAll()};
+window.bookFinish=i=>{
+  const b=S.books[i];if(!b||b.done)return;
+  const note=prompt('5-line synthesis — what does this book actually claim, and do you buy it?');
+  if(!note)return toast('The note is the unit. No note, no finish.');
+  b.done=true;b.pct=100;b.note=note;S.counters.booksDone++;
+  awardXP(XP.book,'book');awardUnit('WIS',3,'bookdone');
+  const dl=S.directive.locked;
+  if(dl&&!dl.done&&dl.link==='bookdone'){dl.count++;if(dl.count>=dl.target){dl.done=true;awardXP(XP.dir,'dir');toast('DIRECTIVE COMPLETE — '+dl.title,true)}}
+  toast('BOOK FILED — +3 WIS units',true);checkFiles();save();renderAll();
+};
+
+/* ---- tracks edits ---- */
+window.editTrack=k=>{
+  if(k==='ma'){const p=+prompt('Math Academy — current course % :',S.tracks.ma.pct);if(!isNaN(p))S.tracks.ma.pct=Math.max(0,Math.min(100,p));
+    const c=prompt('Course name:',S.tracks.ma.course);if(c)S.tracks.ma.course=c}
+  if(k==='pwn'){const b=prompt('pwn.college belt (none/white/orange/yellow/green/blue):',S.tracks.pwn.belt);if(b)S.tracks.pwn.belt=b}
+  if(k==='neet'){const n=+prompt('NeetCode solved (of 150):',S.tracks.neet);if(!isNaN(n))S.tracks.neet=n}
+  if(k==='cs50'){const n=+prompt('CS50 week completed (0–10):',S.tracks.cs50);if(!isNaN(n))S.tracks.cs50=n}
+  if(k==='thm'){const n=+prompt('THM SOC L1 path %:',S.tracks.thm);if(!isNaN(n))S.tracks.thm=n}
+  save();renderAll();
+};
+
+/* ---- debrief ---- */
+window.openDebrief=()=>{
+  const b=S.debrief;if(!b)return;
+  const verdict=b.burn?'FAILSAFE BURNED':b.full?'FULL SIGNAL':'SIGNAL BROKEN';
+  const vcol=b.burn?'var(--amber)':b.full?'var(--grn)':'var(--red)';
+  const uT=STATS.filter(k=>(b.units[k]||0)>0).map(k=>'▲'+k+' '+b.units[k]).join('  ')||'—';
+  const wd=weekday(S.daily.day);const plan=S.trainPlan[wd]||'Rest';const tgt=S.schedule[wd]||0;
+  const drift=S.lastExport?dayNumber(todayStr())-dayNumber(S.lastExport):999;
+  openSheet(`<h3 class="mono" style="letter-spacing:.08em;color:${vcol}">${verdict}</h3>
+  <div class="sub">${b.day}${b.miss&&b.miss.length&&!b.full?' · missed '+b.miss.join(' / '):''}${b.burn?' · covered by failsafe':''}${b.gaps?' · +'+b.gaps+' gap day'+(b.gaps>1?'s':''):''}</div>
+  <div class="card"><div class="prow"><div class="lab">XP banked</div><span class="meta num" style="font-size:14px">${b.xp}</span></div>
+  <div class="prow"><div class="lab">Build</div><span class="meta num">${fmtMin(b.buildMin||0)}</span></div>
+  <div class="prow"><div class="lab">Units</div><span class="meta num">${uT}</span></div>
+  <div class="prow"><div class="lab">Quests · Challenge</div><span class="meta num">${b.quests} · ${b.chal?'★':'—'}</span></div>
+  <div class="prow"><div class="lab">Streak · Static</div><span class="meta num">${b.streak} · ${b.shadow}</span></div></div>
+  ${b.note?`<div class="sub" style="margin-top:10px;white-space:pre-wrap;color:var(--ink)">\u201c${esc(b.note)}\u201d</div>`:''}
+  ${drift>=7?`<div class="banner red" style="margin-top:10px">Backup drift — ${S.lastExport?drift+' days since export':'no export yet'}. <button class="btn sm" style="background:var(--red)" onclick="doExport()">Export now</button></div>`:''}
+  <div class="glbl" style="margin-top:14px">Today\u2019s op</div>
+  <div class="card"><div class="prow"><div class="lab">${plan==='Rest'?'Rest day — honor it':plan+' day'}<small>build ${tgt?fmtMin(tgt):'free'}${S.daily.chal?' · ★ '+esc(S.daily.chal.name):''}</small></div></div></div>
+  <div class="sheet-actions"><button class="btn acc" style="flex:1" onclick="ackDebrief()">Acknowledge</button></div>`);
+};
+window.ackDebrief=()=>{S.debrief=null;save();closeSheet()};
+
+/* ---- beacons ---- */
+window.addBeacon=()=>{
+  if((S.beacons||[]).length>=3){toast('3 beacons max — focus is the feature');return}
+  const t=prompt('Beacon — a long-arc objective (e.g. \u201cSTR 40 — NOVICE IRON\u201d, \u201cMappedUp \u20ac5k MRR\u201d):');if(!t)return;
+  const why=prompt('Why it matters (one line, future-you will read this):')||'';
+  const due=prompt('Target date YYYY-MM-DD (blank = open-ended):')||'';
+  S.beacons.push({t,why,due,pct:0});save();renderAll();toast('BEACON LIT',true);
+};
+window.beaconPct=i=>{
+  const b=S.beacons[i];if(!b)return;
+  const p=+prompt('\u201c'+b.t+'\u201d — progress %, your honest read:',b.pct);if(isNaN(p))return;
+  const was=b.pct;b.pct=Math.max(0,Math.min(100,p));
+  if(b.pct>=100&&was<100){awardXP(400,'beacon');toast('BEACON REACHED — '+b.t,true);beep(980,.2,.06)}
+  save();renderAll();
+};
+window.delBeacon=i=>{if(confirm('Remove this beacon?')){S.beacons.splice(i,1);save();renderAll()}};
+
+/* ---- chrome ---- */
+window.toggleChrome=id=>{
+  const inst=S.chrome.installed;
+  if(inst.includes(id)){S.chrome.installed=inst.filter(x=>x!==id)}
+  else{if(inst.length>=6){toast('6 slots max');return}inst.push(id)}
+  save();renderAll();
+};
+
+/* ---- cloud sync (GitHub Gist) ---- */
+const GIST_FILE='odessos-v5.json';
+function ghHeaders(sy){return{'Authorization':'Bearer '+sy.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'}}
+async function findGist(sy){
+  try{
+    const res=await fetch('https://api.github.com/gists?per_page=100',{headers:ghHeaders(sy)});
+    if(!res.ok)return null;
+    const arr=await res.json();
+    const hit=(arr||[]).find(g=>g.files&&g.files[GIST_FILE]);
+    return hit?hit.id:null;
+  }catch(e){return null}
+}
+async function syncPush(manual){
+  const sy=S.sync;if(!sy||!sy.token)return;
+  try{
+    if(!sy.gist)sy.gist=await findGist(sy);
+    const clean={...S,sync:{...S.sync,token:null}};
+    const body={description:'ODESSOS v5 save — auto-synced, do not edit',public:false,
+      files:{[GIST_FILE]:{content:JSON.stringify(clean)}}};
+    const url=sy.gist?'https://api.github.com/gists/'+sy.gist:'https://api.github.com/gists';
+    const res=await fetch(url,{method:sy.gist?'PATCH':'POST',headers:ghHeaders(sy),body:JSON.stringify(body)});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const j=await res.json();
+    sy.gist=j.id||sy.gist;sy.last=todayStr();S.lastExport=todayStr();
+    save();
+    if(manual){toast('Synced to GitHub');renderAll()}
+  }catch(e){if(manual)toast('Sync failed — '+((e&&e.message)||'check token/network'))}
+}
+async function syncPull(manual){
+  const sy=S.sync;if(!sy||!sy.token)return null;
+  try{
+    if(!sy.gist){sy.gist=await findGist(sy);save()}
+    if(!sy.gist)return null;
+    const res=await fetch('https://api.github.com/gists/'+sy.gist,{headers:ghHeaders(sy)});
+    if(!res.ok)throw 0;
+    const j=await res.json();
+    const f=j.files&&j.files[GIST_FILE];
+    if(!f)return null;
+    let content=f.content;
+    if(f.truncated&&f.raw_url){const r2=await fetch(f.raw_url);content=await r2.text()}
+    return JSON.parse(content);
+  }catch(e){if(manual)toast('Cloud read failed');return null}
+}
+window.syncNow=()=>syncPush(true);
+window.syncRestore=async()=>{
+  const remote=await syncPull(true);
+  if(!remote){toast('No cloud save found for this token');return}
+  if(!confirm('Cloud save (last day: '+(remote.lastDay||'?')+', '+(remote.xp||0)+' xp) — replace what\u2019s on this phone?'))return;
+  const tok=S.sync.token,g=S.sync.gist;
+  S=normalize(remote);
+  S.sync=S.sync||{};S.sync.token=tok;S.sync.gist=g;
+  if(!S.daily.board.length){S.daily.board=dealBoard(S.daily.day);S.daily.chal=S.daily.chal||dealChallenge(S.daily.day)}
+  processRollovers();
+  save();renderAll();toast('Restored from cloud',true);
+};
+
+/* ---- settings / export ---- */
+window.openSettings=()=>{
+  openSheet(`<h3>Settings</h3><div class="sub">v5 · numbers are tunable, features are frozen</div>
+  <div class="frow"><label>Bodyweight kg (STR gates)</label><input id="s-bw" type="number" value="${S.bw}"></div>
+  <div class="frow"><label>Chess.com rapid rating</label><input id="s-ch" type="number" value="${S.chessRating||''}" placeholder="0 if none"></div>
+  <div class="frow"><label>Build schedule minutes — Sun,Mon,Tue,Wed,Thu,Fri,Sat</label>
+    <input id="s-sched" value="${[0,1,2,3,4,5,6].map(i=>S.schedule[i]).join(',')}"></div>
+  <div class="frow"><label>Train plan — Sun..Sat (Push/Pull/Legs/Full/Rest)</label>
+    <input id="s-plan" value="${[0,1,2,3,4,5,6].map(i=>S.trainPlan[i]).join(',')}"></div>
+  <div class="frow"><label>Sell quota — outreach,posts,demos per week</label>
+    <input id="s-quota" value="${S.sell.quota.outreach},${S.sell.quota.posts},${S.sell.quota.demos}"></div>
+  <div class="frow"><label>GitHub sync token (classic PAT, gist scope only)</label>
+    <input id="s-token" value="${S.sync&&S.sync.token?S.sync.token:''}" placeholder="ghp_… — enables cloud backup"></div>
+  <div class="sub" style="margin-top:-4px">${S.sync&&S.sync.gist?'Cloud linked · last sync '+(S.sync.last||'—'):'Cloud sync off'}</div>
+  <div class="sheet-actions" style="margin-top:6px">
+    <button class="btn sec" onclick="syncNow()">Sync now</button>
+    <button class="btn sec" onclick="syncRestore()">Restore from cloud</button>
+  </div>
+  <div class="sheet-actions"><button class="btn sec" onclick="closeSheet()">Cancel</button>
+  <button class="btn" onclick="saveSettings()">Save</button></div>
+  <div style="height:14px"></div>
+  <div class="sheet-actions">
+    <button class="btn sec" onclick="doExport()">Export save</button>
+    <button class="btn sec" onclick="doImport()">Import</button>
+  </div>
+  <div style="height:8px"></div>
+  <button class="btn ghost" style="width:100%" onclick="hardReset()">Hard reset (asks twice)</button>`);
+};
+window.saveSettings=()=>{
+  S.bw=+$('s-bw').value||S.bw;S.chessRating=+$('s-ch').value||0;
+  const sc=$('s-sched').value.split(',').map(x=>Math.max(0,+x||0));if(sc.length===7)[0,1,2,3,4,5,6].forEach(i=>S.schedule[i]=sc[i]);
+  const pl=$('s-plan').value.split(',').map(x=>x.trim());if(pl.length===7)[0,1,2,3,4,5,6].forEach(i=>S.trainPlan[i]=pl[i]||'Rest');
+  const q=$('s-quota').value.split(',').map(x=>+x||0);if(q.length===3)S.sell.quota={outreach:q[0],posts:q[1],demos:q[2]};
+  const tok=($('s-token').value||'').trim();
+  S.sync=S.sync||{token:null,gist:null,last:null};
+  const hadToken=!!S.sync.token;S.sync.token=tok||null;
+  save();closeSheet();renderAll();toast('Saved');
+  if(S.sync.token&&!hadToken)syncPush(true);
+};
+window.doExport=async()=>{
+  const data=JSON.stringify(S);const name='odessos-backup-'+todayStr()+'.json';
+  const done=msg=>{S.lastExport=todayStr();save();renderAll();if(msg)toast(msg)};
+  try{
+    if(navigator.share&&window.File){
+      const f=new File([data],name,{type:'application/json'});
+      if(!navigator.canShare||navigator.canShare({files:[f]})){
+        await navigator.share({files:[f],title:name});
+        done('Backup shared — put it somewhere real');return;
+      }
+    }
+  }catch(e){if(e&&e.name==='AbortError')return}
+  try{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));
+    a.download=name;a.click();done('Backup downloaded');return;
+  }catch(e){}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(data).then(()=>done('Save copied — paste into Notes NOW'),()=>prompt('Copy this:',data));
+  }else{prompt('Copy this:',data);done()}
+};
+window.doImport=()=>{
+  const raw=prompt('Paste your ODESSOS v5 export:');if(!raw)return;
+  try{const s=JSON.parse(raw);if(s.v!==5)throw 0;S=normalize(s);
+    if(!S.daily.board.length){S.daily.board=dealBoard(S.daily.day);S.daily.chal=S.daily.chal||dealChallenge(S.daily.day)}
+    save();closeSheet();renderAll();toast('Imported')}catch(e){toast('Not a valid v5 save')}
+};
+window.hardReset=()=>{if(confirm('Wipe everything?')&&confirm('Really — no undo. Export first?')){localStorage.removeItem(KEY);location.reload()}};
+
+/* ---- placement ---- */
+function placementNeeded(){return !S.placed}
+window.openPlacement=(step=0)=>{
+  const steps=[
+    `<h3>PLACEMENT — 1/5 · STR</h3><div class="sub">Best current lifts (tested or honest e1RM). Bodyweight first.</div>
+    <div class="frow"><label>Bodyweight kg</label><input id="p-bw" type="number" value="${S.bw}"></div>
+    <div class="frow"><label>Squat kg</label><input id="p-sq" type="number" inputmode="decimal" placeholder="0 if untested"></div>
+    <div class="frow"><label>Bench kg</label><input id="p-be" type="number" inputmode="decimal"></div>
+    <div class="frow"><label>Deadlift kg</label><input id="p-dl" type="number" inputmode="decimal"></div>`,
+    `<h3>PLACEMENT — 2/5 · VIT</h3><div class="sub">Most recent 5k, if any.</div>
+    <div class="frow"><label>5k time mm:ss (blank = none yet)</label><input id="p-run" placeholder="27:40"></div>`,
+    `<h3>PLACEMENT — 3/5 · INT</h3><div class="sub">Pick the highest tier where <b>everything</b> listed is already true. Unsure = pick lower; Gates re-verify all of it anyway.</div>
+    <div class="frow"><div class="seg" id="p-int" style="flex-direction:column">
+      <button class="on" style="width:100%;text-align:left" onclick="segPick(this)" data-v="0">Starting fresh<small style="display:block;color:var(--dim);font-weight:400">no structured math/CS finished yet — most people start here</small></button>
+      <button style="width:100%;text-align:left" onclick="segPick(this)" data-v="20">BOOTED — all of these done<small style="display:block;color:var(--dim);font-weight:400">Math Academy diagnostic + ≥50% of Foundations I · 10 NeetCode solved · pwn.college Linux Luminarium</small></button>
+      <button style="width:100%;text-align:left" onclick="segPick(this)" data-v="40">OPERATOR — all of these done<small style="display:block;color:var(--dim);font-weight:400">Foundations I complete · CS50 weeks 1–5 psets · NeetCode 50 · first pwn belt</small></button></div></div>`,
+    `<h3>PLACEMENT — 4/5 · WIS</h3>
+    <div class="frow"><label>Books finished with real notes (lifetime, honest)</label><input id="p-books" type="number" value="0"></div>
+    <div class="frow"><label>Chess.com rapid rating (0 if none)</label><input id="p-chess" type="number" value="0"></div>`,
+    `<h3>PLACEMENT — 5/5 · CHA</h3>
+    <div class="frow"><label>Demos / discovery calls delivered (lifetime)</label><input id="p-demos" type="number" value="0"></div>
+    <div class="frow"><label>Posts published</label><input id="p-posts" type="number" value="0"></div>
+    <div class="frow"><label>Talks to 5+ people</label><input id="p-talks" type="number" value="0"></div>`
+  ];
+  const last=step===steps.length-1;
+  openSheet(steps[step]+`<div class="sheet-actions">
+    <button class="btn sec" onclick="placeStep(${step},true)">${step===0?'Skip all (start at 0)':'Skip'}</button>
+    <button class="btn acc" onclick="placeStep(${step},false)">${last?'Finish placement':'Next'}</button></div>`);
+};
+const P={};
+window.placeStep=(step,skip)=>{
+  if(step===0&&skip){S.placed=true;save();closeSheet();renderAll();toast('Placed at zero — everything is upside');return}
+  if(!skip){
+    if(step===0){P.bw=+$('p-bw').value||S.bw;P.sq=+$('p-sq').value||0;P.be=+$('p-be').value||0;P.dl=+$('p-dl').value||0}
+    if(step===1){const v=$('p-run').value.trim();P.run=v;P.runSec=null;
+      if(v){const s=parseTimeStr(v);
+        if(s===null){toast('Format mm:ss, e.g. 27:40');return}
+        if(s<780){toast('Under 13:00 is faster than the 5k world record — enter total time, not min/km pace');return}
+        P.runSec=s;}}
+    if(step===2){P.int=+document.querySelector('#p-int .on').dataset.v}
+    if(step===3){P.books=+$('p-books').value||0;P.chess=+$('p-chess').value||0}
+    if(step===4){P.demos=+$('p-demos').value||0;P.posts=+$('p-posts').value||0;P.talks=+$('p-talks').value||0}
+  }
+  if(step<4){openPlacement(step+1);return}
+  applyPlacement();closeSheet();
+};
+function applyPlacement(){
+  S.bw=P.bw||S.bw;
+  const place=(stat,gate,proof)=>{if(gate>0){S.stats[stat].score=gate;S.stats[stat].cleared=gate;S.gatesLog.push({stat,gate,date:todayStr(),proof:'placement: '+proof})}};
+  // STR
+  let sg=0;const bw=S.bw;
+  for(const g of[20,40,60,80,100]){const r=GATES.STR[g].r;
+    const hits=[(P.sq||0)>=r.sq*bw,(P.be||0)>=r.be*bw,(P.dl||0)>=r.dl*bw].filter(Boolean).length;
+    if(hits>=2)sg=g;else break}
+  place('STR',sg,`sq${P.sq}/be${P.be}/dl${P.dl}`);
+  // VIT
+  let vg=0;
+  if(P.runSec){for(const g of[20,40,60,80,100]){if(GATES.VIT[g].p.k5&&P.runSec<=GATES.VIT[g].p.k5)vg=g;else break}}
+  place('VIT',vg,'5k '+(P.run||'none'));
+  // INT
+  place('INT',P.int||0,'attested tier');
+  // WIS
+  S.counters.booksDone=P.books||0;S.chessRating=P.chess||0;
+  let wg=0;for(const g of[20,40,60,80,100]){const gd=GATES.WIS[g];if((P.books||0)>=gd.b||(P.chess||0)>=gd.c)wg=g;else break}
+  place('WIS',wg,'books '+(P.books||0)+' / rating '+(P.chess||0));
+  // CHA
+  S.counters.demos=P.demos||0;S.counters.posts=P.posts||0;S.counters.talks=P.talks||0;
+  S.counters.chaReps=(P.demos||0)*2+(P.posts||0)+(P.talks||0)*3;
+  let cg=0;
+  if((P.demos||0)>=5&&(P.posts||0)>=3)cg=20;
+  if((P.demos||0)>=25&&(P.talks||0)>=1)cg=40;
+  place('CHA',cg,'demos '+(P.demos||0));
+  S.placed=true;checkFiles();save();renderAll();
+  toast('PLACEMENT COMPLETE — '+STATS.map(k=>k+' '+S.stats[k].score).join(' · '),true);
+}
+
+/* ================= RENDER ================= */
+function statBarHTML(k){
+  const st=S.stats[k];const p=price(st.score);const wall=atWall(k)&&st.prog>=p;
+  const pct=Math.round(100*st.prog/p);
+  const gate=Math.min(100,st.cleared+20);
+  return `<div class="statrow">
+    <div class="k">${k}</div><div class="v">${st.score}</div>
+    <div class="barwrap"><div class="bar ${wall?'atgate':''}"><i style="width:${pct}%"></i></div>
+    <div class="sub"><span>${st.prog}/${p} units to next</span><span>${wall?'<span class="gate-flag">AT GATE '+gate+'</span>':'gate '+gate+' · '+ (GATES[k][gate]?GATES[k][gate].n:'—')}</span></div></div>
+    <button class="btn sm sec" onclick="openGate('${k}')">Gate</button>
+  </div>`;
+}
+function renderHeader(){
+  const L=levelFromXP(S.xp);
+  const sig=S.shadow<20?' · signal +10%':S.shadow>=60?' · static −20%':'';
+  $('h-date').textContent=DOWN[weekday(S.daily.day)]+' '+S.daily.day+' · streak '+S.streak+' · static '+S.shadow+sig;
+  $('h-rank').textContent=rankFor(L.l);
+  $('h-lvl').textContent=L.l;$('h-xp').textContent=S.xp;
+  $('h-xpfill').style.width=Math.round(100*L.into/L.need)+'%';
+}
+function renderToday(){
+  const d=S.daily;const wd=weekday(d.day);
+  const plan=S.trainPlan[wd]||'Rest';const tgt=S.schedule[wd]||0;
+  let h='';
+  if(d.mercyBanner)h+=`<div class="banner red">FAILSAFE BURNED — covered ${d.mercyBanner.covered} (${esc(d.mercyBanner.missed)}). ${S.mercy.available} left this week.<button class="x" onclick="S.daily.mercyBanner=null;save();renderAll()">×</button></div>`;
+  // today so far
+  const uT=STATS.filter(k=>d.units[k]>0).map(k=>'▲'+k+' '+d.units[k]).join('  ');
+  if(d.xp>0||uT)h+=`<div class="chip" style="display:block;margin-bottom:12px">today <b>+${d.xp} xp</b>${uT?' · '+uT:''}</div>`;
+  // baseline: sleep + water
+  h+=`<div class="card">`;
+  if(!S.sleep){
+    h+=`<div class="prow"><div class="lab">Sleep ladder<small>earn 06:30 twenty minutes at a time — the wake anchor sets everything else</small></div>
+    <button class="btn sm acc" onclick="setupSleep()">Set up</button></div>`;
+  }else{
+    const sl=S.sleep;const at=sl.cur===sl.goal;
+    h+=`<div class="prow"><span class="check ${d.wake?'done':''}">${d.wake?'✓':''}</span>
+    <div class="lab ${d.wake?'done-lab':''}">Wake ${fmtHM(sl.cur)}${at?' · AT TARGET':''}<small>confirm by ${fmtHM(sl.cur+25)} · held ${sl.held}/${at?7:3} · lights-down ${fmtHM(Math.max(0,sl.cur-465))}</small></div>
+    ${d.wake?`<span class="meta">☀ ${d.wake}</span>`:`<button class="btn sm sec" onclick="wakeConfirm()">I\u2019m up</button>`}</div>`;
+  }
+  const wg=S.waterGoal||8;const wtr=d.water||0;
+  h+=`<div class="prow"><div class="lab">Water<small class="mono" style="letter-spacing:2px">${'●'.repeat(Math.min(wtr,wg))}${'○'.repeat(Math.max(0,wg-wtr))}</small></div>
+  <span class="meta num">${wtr}/${wg}</span><button class="btn sm sec" onclick="waterAdd()">+1</button></div></div>`;
+  // directive
+  const dir=S.directive;
+  if(dir.locked){const dl=dir.locked;
+    h+=`<div class="card dir-card"><div class="pill-h"><span class="nm">DIRECTIVE</span><span class="stt">${monthKey(d.day)}</span>
+    <span class="hrs num">${dl.count}/${dl.target}</span></div>
+    <div class="prow"><span class="check ${dl.done?'done':''}">${dl.done?'✓':''}</span>
+    <div class="lab ${dl.done?'done-lab':''}">${esc(dl.title)}<small>${esc(dl.desc)}</small></div>
+    ${dl.done?'':'<button class="btn sm sec" onclick="dirTick()">+1</button>'}</div></div>`;
+  }else if(dir.options.length){
+    h+=`<div class="card dir-card"><div class="pill-h"><span class="nm">DIRECTIVE — PICK ONE FOR ${monthKey(d.day)}</span></div>`;
+    dir.options.forEach((o,i)=>{h+=`<button class="list-btn" onclick="lockDirective(${i})"><span>${o.title}<small>${o.desc}</small></span><span class="r">lock →</span></button>`});
+    h+=`<button class="list-btn" onclick="lockDirective(-1)"><span>Custom…<small>your own month-scale target</small></span><span class="r">lock →</span></button></div>`;
+  }
+  // TRAIN
+  h+=`<div class="glbl">Pillars <span class="r num">${S.streak}🔥</span></div>`;
+  h+=`<div class="card"><div class="pill-h"><span class="nm">TRAIN</span><span class="stt">· ${plan.toUpperCase()} DAY · STR/VIT</span></div>`;
+  if(plan==='Rest'){
+    h+=`<div class="prow"><span class="check ${d.restHonored?'done':''}">${d.restHonored?'✓':''}</span>
+    <div class="lab ${d.restHonored?'done-lab':''}">Rest day — honor it<small>recovery is where the units cash in</small></div>
+    ${d.restHonored?'':'<button class="btn sm sec" onclick="honorRest()">Honored</button>'}</div>`;
+  }else{
+    h+=`<div class="prow"><span class="check ${d.train?'done':''}">${d.train?'✓':''}</span>
+    <div class="lab ${d.train?'done-lab':''}">${plan} day — log the session<small>≥45 min, progression attempt · ▲STR</small></div>
+    ${d.train?`<span class="meta">${d.train.type}${d.train.progressed?' ↑':''}</span>`:'<button class="btn sm acc" onclick="openTrain()">Log</button>'}</div>`;
+  }
+  h+='</div>';
+  // BUILD
+  const liveMin=S.live?Math.round((Date.now()-S.live.since)/60000):0;
+  h+=`<div class="card"><div class="pill-h"><span class="nm">BUILD</span><span class="stt">· MAPPEDUP · XP ONLY</span>
+    <span class="hrs num" id="score-hrs">${fmtMin(d.buildMin+liveMin)} / ${tgt?fmtMin(tgt):'rest'}</span></div>
+  <div class="prow"><div class="lab">${S.live?'Score running — <b class="num">'+fmtMin(liveMin)+'</b>':'The Score'}<small>${tgt?('target '+fmtMin(tgt)+' · +'+XP.target+' on hit'):'no target today — Friday is yours'}</small></div>
+    ${S.live?'<button class="btn sm" onclick="jackOut()">JACK OUT</button>':'<button class="btn sm acc" onclick="jackIn()">JACK IN</button>'}</div>
+  <div class="prow"><div class="lab" style="display:flex;gap:7px">
+    <button class="btn sm sec" onclick="scoreAdj(15)">+15m</button>
+    <button class="btn sm sec" onclick="scoreAdj(60)">+1h</button>
+    <button class="btn sm sec" onclick="scoreAdj(-15)">−15m</button>
+    <button class="btn sm ghost" onclick="openNoteSheet()">note</button></div>
+    <span class="meta">${d.buildBonus?'<b>target ✓</b>':''}</span></div></div>`;
+  // STUDY
+  h+=`<div class="card"><div class="pill-h"><span class="nm">STUDY</span><span class="stt">· INT</span></div>
+  <div class="prow"><span class="check ${d.study.ma?'done':''}">${d.study.ma?'✓':''}</span>
+    <div class="lab ${d.study.ma?'done-lab':''}">Math Academy — hit the daily goal<small>~${S.maGoal} XP ≈ 30 min · ▲INT</small></div>
+    ${d.study.ma?'':'<button class="btn sm acc" onclick="maDone()">Done</button>'}</div>
+  <div class="prow"><span class="check ${d.study.pick?'done':''}">${d.study.pick?'✓':''}</span>
+    <div class="lab">Pick one<small>▲INT · extra picks still count (cap 3/day)</small></div></div>
+  <div class="prow"><div class="lab" style="display:flex;gap:6px;flex-wrap:wrap">
+    <button class="btn sm sec" onclick="pickStudy('pwn')">pwn</button>
+    <button class="btn sm sec" onclick="pickStudy('neet')">NeetCode</button>
+    <button class="btn sm sec" onclick="pickStudy('cs50')">CS50</button>
+    <button class="btn sm sec" onclick="pickStudy('thm')">THM</button></div></div></div>`;
+  // SELL
+  const q=S.sell.quota;
+  h+=`<div class="card"><div class="pill-h"><span class="nm">SELL</span><span class="stt">· CHA · WEEKLY</span>
+    <span class="hrs num">${S.sell.paid?'quota ✓':''}</span></div>
+  <div class="prow"><div class="lab">Outreach batches<small>≥5 sent, ≥1 reply · ▲CHA</small></div>
+    <span class="meta num">${S.sell.outreach}/${q.outreach}</span><button class="btn sm sec" onclick="ledgerAdd('outreach')">+1</button></div>
+  <div class="prow"><div class="lab">Posts<small>▲CHA · 2/wk count</small></div>
+    <span class="meta num">${S.sell.posts}/${q.posts}</span><button class="btn sm sec" onclick="ledgerAdd('post')">+1</button></div>
+  <div class="prow"><div class="lab">Demos / calls<small>▲▲CHA</small></div>
+    <span class="meta num">${S.sell.demos}/${q.demos}</span><button class="btn sm sec" onclick="ledgerAdd('demo')">+1</button></div></div>`;
+  // BOARD
+  const maxR=1+(installed('ch1')?1:0);
+  h+=`<div class="glbl">Side quests <span class="r"><button class="btn sm ghost" onclick="rerollBoard()">reroll ${S.daily.reroll}/${maxR}</button></span></div><div class="card">`;
+  d.board.forEach((qd,i)=>{
+    const done=d.doneQ.includes(qd.id);
+    h+=`<div class="prow ${qd.r===3?'rare':''}"><span class="check ${done?'done':''}">${done?'✓':''}</span>
+    <div class="lab ${done?'done-lab':''}"><span class="t">${esc(qd.name)}</span><small>${esc(qd.sub)} ${qd.u?'· <span class="tag-u">▲'+qd.stat+'</span>':''}</small></div>
+    ${done?`<span class="meta"><b>+${questXP(qd)}</b></span>`:`<button class="btn sm sec" onclick="questDone(${i})">Done</button>`}</div>`;
+  });
+  h+='</div>';
+  // CHALLENGE
+  const c=d.chal;
+  if(c){h+=`<div class="card chal-card"><div class="pill-h"><span class="nm">★ CHALLENGE</span><span class="stt">· ${c.stat} · ▲▲ 2 UNITS</span>
+    <span class="hrs"><button class="btn sm ghost" onclick="rerollChal()">↻</button></span></div>
+  <div class="prow"><span class="check ${d.chalDone?'done':''}">${d.chalDone?'✓':''}</span>
+    <div class="lab ${d.chalDone?'done-lab':''}">${esc(c.name)}<small>${esc(c.sub)}</small></div>
+    ${d.chalDone?`<span class="meta"><b>+${c.xp}</b></span>`:`<button class="btn sm" style="background:var(--amber)" onclick="chalDone()">Clear</button>`}</div></div>`;}
+  // CONTRACTS
+  h+=`<div class="glbl">Contracts <span class="r"><button class="btn sm ghost" onclick="addContract()">+ add</button></span></div><div class="card">`;
+  const open=S.contracts.filter(x=>!x.done);
+  if(!open.length)h+=`<div class="empty">No open contracts. Errands, jobs, heists — add anything real.</div>`;
+  S.contracts.forEach((cn,i)=>{if(cn.done)return;
+    h+=`<div class="prow"><span class="check"></span><div class="lab">${esc(cn.t)}<small>${cn.tier} · +${XP.contract[cn.tier]} XP</small></div>
+    <button class="btn sm sec" onclick="doneContract(${i})">Done</button></div>`});
+  h+='</div>';
+  $('v-today').innerHTML=h;
+}
+function renderTracks(){
+  const t=S.tracks;
+  let h=`<div class="glbl">Beacons <span class="r"><button class="btn sm ghost" onclick="addBeacon()">+ set</button></span></div><div class="card">`;
+  if(!(S.beacons||[]).length)h+=`<div class="empty">Up to 3 long-arc objectives — the reason the dailies exist. Tap one to update your honest %.</div>`;
+  (S.beacons||[]).forEach((b,i)=>{
+    let dl='';
+    if(b.due&&/^\d{4}-\d{2}-\d{2}$/.test(b.due)){const days=Math.ceil((parseDay(b.due)-parseDay(todayStr()))/86400000);
+      dl=' · '+(days>=0?days+'d left':Math.abs(days)+'d over')}
+    h+=`<div class="prow" onclick="beaconPct(${i})" style="cursor:pointer"><div class="lab"><b>${esc(b.t)}</b><small>${esc(b.why)}${dl}</small>
+    <div style="height:5px;border-radius:4px;background:var(--line2);margin-top:7px"><i style="display:block;height:100%;width:${b.pct}%;background:${b.pct>=100?'var(--grn)':'var(--acc)'};border-radius:4px"></i></div></div>
+    <span class="meta num">${b.pct}%</span>
+    <button class="btn sm ghost" onclick="event.stopPropagation();delBeacon(${i})">×</button></div>`;
+  });
+  h+=`</div><div class="glbl">Study ladder</div><div class="card">
+  <button class="list-btn" onclick="editTrack('ma')"><span>Math Academy<small>${esc(t.ma.course)}</small></span><span class="r num">${t.ma.pct}%</span></button>
+  <button class="list-btn" onclick="editTrack('pwn')"><span>pwn.college<small>belt ladder · free</small></span><span class="r num">${esc(t.pwn.belt)} · ${t.pwn.ch}ch</span></button>
+  <button class="list-btn" onclick="editTrack('neet')"><span>NeetCode 150<small>DSA roadmap · free</small></span><span class="r num">${t.neet}/150</span></button>
+  <button class="list-btn" onclick="editTrack('cs50')"><span>CS50x<small>C weeks 1–5 · free</small></span><span class="r num">wk ${t.cs50}</span></button>
+  <button class="list-btn" onclick="editTrack('thm')"><span>TryHackMe — SOC L1<small>$14/mo when active</small></span><span class="r num">${t.thm}%</span></button>
+  </div>
+  <div class="glbl">Books <span class="r"><button class="btn sm ghost" onclick="addBook()">+ add</button></span></div><div class="card">`;
+  if(!S.books.length)h+=`<div class="empty">Register a book. Sessions pay 1 WIS unit; finishing with a real note pays 3.</div>`;
+  S.books.forEach((b,i)=>{
+    h+=`<div class="prow"><div class="lab ${b.done?'done-lab':''}">${esc(b.t)}<small>${b.done?'filed':'in progress'}</small></div>
+    <span class="meta num">${b.pct}%</span>
+    ${b.done?'':`<button class="btn sm sec" onclick="bookPct(${i})">%</button><button class="btn sm sec" onclick="bookFinish(${i})">Finish</button>`}</div>`;
+  });
+  h+=`</div><div class="glbl">Gates</div><div class="card">`;
+  for(const k of STATS){
+    const st=S.stats[k];const gate=Math.min(100,st.cleared+20);const G=GATES[k][gate];
+    h+=`<div class="gatebox"><div class="gh"><b>${k}</b><span style="color:var(--dim)">next: GATE ${gate}${G?' — '+G.n:''}</span>
+    <span style="margin-left:auto" class="num">${st.score}</span></div>
+    <div class="req">${G?G.d:'Capped.'}</div>
+    ${G?`<div style="margin-top:8px"><button class="btn sm sec" onclick="openGate('${k}')">Attempt Gate ${gate}</button></div>`:''}</div>`;
+  }
+  h+='</div>';
+  $('v-tracks').innerHTML=h;
+}
+window.logView=v=>{window._lv=v;window._ln=0;renderAll()};
+function renderLog(){
+  let h=`<div class="glbl">Bounties — ${monthKey(todayStr())} <span class="r"><button class="btn sm ghost" onclick="addBounty()">+ add</button></span></div><div class="card">`;
+  if(!S.bounties.length)h+=`<div class="empty">Up to 3 month-scale bounties. The Audit will ask.</div>`;
+  S.bounties.forEach((b,i)=>{h+=`<div class="prow"><span class="check ${b.done?'done':''}">${b.done?'✓':''}</span>
+    <div class="lab ${b.done?'done-lab':''}">${esc(b.t)}</div><span class="meta num">+${b.x}</span>
+    ${b.done?'':`<button class="btn sm sec" onclick="closeBounty(${i})">Close</button>`}</div>`});
+  const ship=window._lv==='ship';
+  h+=`</div><div class="glbl">History <span class="r" style="display:flex;gap:6px">
+    <button class="btn sm ${ship?'ghost':'sec'}" onclick="logView('days')">Days</button>
+    <button class="btn sm ${ship?'sec':'ghost'}" onclick="logView('ship')">Ship log</button></span></div>`;
+  if(ship){
+    const rows=[];
+    (S.daily.sessions||[]).forEach(s=>{if(s.n)rows.push({day:S.daily.day,today:true,...s})});
+    S.log.forEach(l=>(l.sessions||[]).forEach(s=>{if(s.n)rows.push({day:l.day,...s})}));
+    const lim=window._ln||80;
+    h+=`<div class="card">`;
+    if(!rows.length)h+=`<div class="empty">Jack out with a note — every session lands here and stays. This is the record of the build.</div>`;
+    rows.slice(0,lim).forEach(r=>{h+=`<div class="prow"><div class="lab">${esc(r.n)}<small class="mono">${r.day}${r.today?' · today':''}${r.t?' · '+r.t:''}${r.m?' · '+fmtMin(r.m):''}</small></div></div>`});
+    h+=`</div>`;
+    if(rows.length>lim)h+=`<button class="btn sec" style="width:100%;margin-bottom:12px" onclick="window._ln=${lim+150};renderAll()">Show more · ${rows.length} sessions total</button>`;
+    else if(rows.length)h+=`<div class="empty smallcaps">${rows.length} sessions on record</div>`;
+  }else{
+    const lim=window._ln||60;
+    if(!S.log.length)h+=`<div class="card"><div class="empty">Day one. History starts tonight.</div></div>`;
+    S.log.slice(0,lim).forEach(l=>{
+      h+=`<div class="card day-card"><div class="dh"><span class="d">${l.day} ${DOWN[weekday(l.day)]}</span>
+      <span class="s" style="color:${l.full?'var(--grn)':'var(--red)'}">${l.full?'FULL':'MISS '+(l.miss||[]).join('/')}</span></div>
+      <div class="body"><span class="num">${fmtMin(l.buildMin||0)}</span> build · ${l.train?l.train+' · ':''}${l.quests||0} quests · <span class="num">${l.xp||0}</span> xp${l.wake?' · ☀ '+l.wake:''}
+      ${l.note?`<div class="note">${esc(l.note)}</div>`:''}</div></div>`;
+    });
+    if(S.log.length>lim)h+=`<button class="btn sec" style="width:100%;margin-bottom:12px" onclick="window._ln=${lim+120};renderAll()">Show more · ${S.log.length} days</button>`;
+  }
+  $('v-log').innerHTML=h;
+}
+function renderYou(){
+  const L=levelFromXP(S.xp);
+  let h=`<div class="glbl">Stats — units ▲ move them, Gates open them</div><div class="card">`;
+  for(const k of STATS)h+=statBarHTML(k);
+  h+=`</div><div class="glbl">Audits</div><div class="card">`;
+  if(!S.audits.length)h+=`<div class="empty">First Audit files at month end.</div>`;
+  S.audits.forEach(a=>{h+=`<div class="prow"><div class="lab"><b>${a.month}</b> — ${a.title}<small>${a.pct}% full · bounties ${a.bounties} · directive ${a.dirDone?'✓ ':''}${esc(a.dirTitle)}</small></div></div>`});
+  h+=`</div><div class="glbl">Chrome <span class="r num">${S.chrome.installed.length}/6 installed</span></div><div class="card">`;
+  if(!S.chrome.owned.length)h+=`<div class="empty">Chromes mint from Gates, streaks, volume. Passives only — stats are sacred.</div>`;
+  CHROMES.forEach(c=>{if(!S.chrome.owned.includes(c[0]))return;const on=installed(c[0]);
+    h+=`<div class="prow"><div class="lab">${c[1]}<small>${c[2]}</small></div>
+    <button class="btn sm ${on?'':'sec'}" onclick="toggleChrome('${c[0]}')">${on?'Installed':'Install'}</button></div>`});
+  const lockedCh=CHROMES.filter(c=>!S.chrome.owned.includes(c[0]));
+  if(lockedCh.length)h+=`<div class="prow"><div class="lab" style="color:var(--dim)">Locked<small>${lockedCh.map(c=>c[1]+' — '+c[3]).join(' · ')}</small></div></div>`;
+  h+=`</div><div class="glbl">Files <span class="r num">${S.files.length}/19</span></div><div class="card">`;
+  FILES.forEach(f=>{const un=S.files.includes(f[0]);
+    h+=`<div class="filerow ${un?'':'locked'}"><div class="fn">${f[1]}</div><div class="fl">${un?f[3]:f[2]}</div></div>`});
+  h+=`</div>
+  <div class="glbl">System</div><div class="card">
+  <div class="prow"><div class="lab">Failsafe<small>auto-covers one broken day per week · burns are loud</small></div><span class="meta num">${S.mercy.available}/wk</span></div>
+  <div class="prow"><div class="lab">Best streak<small>current ${S.streak}</small></div><span class="meta num">${S.bestStreak}</span></div>
+  <div class="prow"><div class="lab">Last backup<small>weekly export — phone storage is a cache, not a vault</small></div>
+  <span class="meta num">${S.lastExport||'never'}</span><button class="btn sm sec" onclick="doExport()">Export</button></div>
+  <div class="prow"><div class="lab">Cloud sync<small>${S.sync&&S.sync.gist?'GitHub gist linked — pushes daily + on Gates':'off — add a GitHub token in Settings'}</small></div>
+  <span class="meta num">${S.sync&&S.sync.last?S.sync.last:'—'}</span></div>
+  <div class="prow"><div class="lab">Build hours total</div><span class="meta num">${Math.round(S.totals.buildMin/60)}h</span></div>
+  <div class="prow"><div class="lab">Settings, export, import</div><button class="btn sm sec" onclick="openSettings()">Open</button></div>
+  </div>
+  <div class="empty smallcaps">odessos v5 · rank ${rankFor(L.l)} · the static is listening</div>`;
+  $('v-you').innerHTML=h;
+}
+function renderAll(){renderHeader();renderToday();renderTracks();renderLog();renderYou()}
+
+/* ---- signal strip ---- */
+(function(){
+  const cv=$('sig'),ctx=cv.getContext('2d');let t=0;
+  function size(){cv.width=cv.clientWidth*devicePixelRatio;cv.height=22*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
+  size();addEventListener('resize',size);
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function frame(){
+    const w=cv.clientWidth,h=22,mid=h/2;
+    ctx.clearRect(0,0,w,h);
+    const sh=S.shadow/100;
+    ctx.beginPath();
+    for(let x=0;x<=w;x+=2){
+      const noise=(Math.sin(x*0.9+t*7.3)*Math.sin(x*0.23-t*3.1));
+      const y=mid+Math.sin(x*0.045+t*1.6)*3+(noise*9*sh)*(Math.random()*0.4+0.8);
+      x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle=sh>0.6?'#c0453a':sh>0.3?'#b3641e':'#5b5bd6';
+    ctx.globalAlpha=0.55;ctx.lineWidth=1.4;ctx.stroke();ctx.globalAlpha=1;
+    t+=0.016;
+    if(!reduce)requestAnimationFrame(frame);
+  }
+  frame();if(reduce)setInterval(frame,1500);
+})();
+
+/* ---- live score ticker ---- */
+setInterval(()=>{if(S.live){const el=$('score-hrs');if(el){const liveMin=Math.round((Date.now()-S.live.since)/60000);
+  const tgt=S.schedule[weekday(S.daily.day)]||0;el.textContent=fmtMin(S.daily.buildMin+liveMin)+' / '+(tgt?fmtMin(tgt):'rest')}}},30000);
+
+/* ================= INIT ================= */
+processRollovers();
+if(!S.daily.board.length){S.daily.board=dealBoard(S.daily.day);S.daily.chal=S.daily.chal||dealChallenge(S.daily.day)}
+if(!S.directive.options.length&&!S.directive.locked)S.directive.options=rollDirectiveOptions(monthKey(todayStr()));
+save();renderAll();
+if(placementNeeded())setTimeout(()=>openPlacement(0),400);
+else if(S.debrief)setTimeout(()=>openDebrief(),350);
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
