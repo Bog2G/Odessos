@@ -247,7 +247,7 @@ const KINDS={
  train:['Training session','STR',1,XP.train,'≥45 min, progression attempt'],
  cardio:['Cardio session','VIT',1,15,'≥30 min steady or ≥15 min hard'],
  swim:['Swim','VIT',1,16,'≥20 min in the water'],
- sport:['Sport','VIT',1,15,'≥45 min'],
+ sport:['Team sport','VIT',1,15,'football, basketball, tennis… ≥45 min real play'],
  mobility:['Mobility','',0,10,'≥20 min · joint health, not VIT'],
  cold:['Cold shower','VIT',0,8,'full cold, 2+ min'],
  read:['Reading session','WIS',1,10,'≥25 min · 1/day counts'],
@@ -406,6 +406,29 @@ const CHALLENGES=[
 ['CHA','h_c3','Give a 5-min talk and record it','watch it back after','talk',60]
 ];
 
+const WK_LOC={gym:'Gym',bars:'Bars',home:'Home'};
+const WORKOUTS={
+ gym:{
+  push:[['Barbell bench press','4×5-8'],['Overhead press','3×6-10'],['Incline DB press','3×8-12'],['Lateral raise','3×12-15'],['Triceps pushdown','3×10-15'],['Overhead triceps ext','2×12-15']],
+  pull:[['Deadlift','3×3-5'],['Weighted pull-up / lat pulldown','4×6-10'],['Seated cable row','3×8-12'],['Face pull','3×15-20'],['Barbell curl','3×8-12'],['Hammer curl','2×12-15']],
+  legs:[['Back squat','4×5-8'],['Romanian deadlift','3×6-10'],['Leg press','3×10-15'],['Lying leg curl','3×10-15'],['Standing calf raise','4×10-15'],['Hanging leg raise','3×10-15']],
+  full:[['Back squat','4×5-8'],['Bench press','4×6-8'],['Weighted pull-up','4×6-10'],['Overhead press','3×8-12'],['Barbell row','3×8-12'],['Curl + triceps superset','3×12']]
+ },
+ bars:{
+  push:[['Dips — add weight if easy','4×6-12'],['Pseudo-planche push-ups','3×8-12'],['Pike push-ups / wall HSPU','3×6-10'],['Archer or decline push-ups','3×8-12'],['Diamond push-ups','3×AMRAP']],
+  pull:[['Pull-ups — add weight if easy','4×5-10'],['Chin-ups','3×6-10'],['Australian rows','3×10-15'],['Scapular pull-ups','3×8'],['Hanging leg raise','3×10-15']],
+  legs:[['Bulgarian split squat (foot on bench)','4×8-12/leg'],['Pistol squat progression','3×5-8/leg'],['Jump squats','3×10'],['Nordic curl / hamstring','3×5-8'],['Curb calf raise','4×15-20'],['Walking lunges','3×12/leg']],
+  full:[['Pull-ups','4×6'],['Dips','4×8'],['Push-ups','3×15'],['Bulgarian split squat','3×12/leg'],['L-sit hold','4×20-40s'],['Hanging leg raise','3×12']]
+ },
+ home:{
+  push:[['Push-ups — scale the variation','4×AMRAP'],['Pike push-ups','3×8-12'],['Pseudo-planche push-ups','3×8'],['Wall handstand hold','3×20-40s'],['Diamond push-ups','3×12']],
+  pull:[['Backpack rows — load it heavy','4×10-15'],['Inverted rows under a sturdy table','4×8-12'],['Towel door rows','3×10-15'],['Backpack curls','3×12'],['Superman holds','3×20s']],
+  legs:[['Bodyweight squats','4×15-20'],['Bulgarian split squat (foot on chair)','4×10-12/leg'],['Pistol progression','3×5-8/leg'],['Reverse lunges','3×12/leg'],['Single-leg glute bridge','3×12/leg'],['Calf raises','4×20']],
+  full:[['Push-ups','4×15'],['Backpack / table rows','4×12'],['Bodyweight squats','3×20'],['Reverse lunges','3×12/leg'],['Plank','3×45s'],['Mountain climbers','3×30s']]
+ }
+};
+const splitKey=v=>{v=(v||'').toLowerCase();if(v.startsWith('push'))return'push';if(v.startsWith('pull'))return'pull';if(v.startsWith('leg'))return'legs';return'full'};
+
 const DIRECTIVES=[
 ['d01','Iron Month','20 training sessions',20,'train'],
 ['d02','Deep Shelf','Finish 2 books with notes',2,'bookdone'],
@@ -418,7 +441,13 @@ const DIRECTIVES=[
 ['d09','Clean Feed','24 no-sugar days (tick daily)',24,''],
 ['d10','Iron Mind','20 meditation sessions',20,'med'],
 ['d11','Page Discipline','20 reading days',20,'read'],
-['d12','Step Standard','25 days over 8k steps (tick daily)',25,'']
+['d12','Step Standard','25 days over 8k steps (tick daily)',25,''],
+['d13','Deep Work','15 Build sessions logged with a ship note',15,''],
+['d14','Iron Volume','25 training sessions',25,'train'],
+['d15','Pull Nation','12 bar / calisthenics sessions (tick)',12,''],
+['d16','Ship It','8 outreach batches',8,'outreach'],
+['d17','Rung by Rung','Advance the sleep ladder one full step',1,''],
+['d18','Long Reads','8 sessions of 1h+ reading (tick)',8,'']
 ];
 
 const FILES=[
@@ -482,7 +511,7 @@ function defaultState(){
   return {
     v:5, created:t, lastDay:t, xp:0,
     bw:85, chessRating:0, maGoal:30,
-    sleep:null, waterGoal:8, lastExport:null,
+    sleep:null, waterGoal:8, lastExport:null, trainLoc:'gym',
     sync:{token:null,gist:null,last:null},
     stats:Object.fromEntries(STATS.map(k=>[k,{score:0,prog:0,cleared:0}])),
     gatesLog:[],
@@ -630,11 +659,16 @@ function dealChallenge(day){
   const c=opts[Math.floor(rng(hashStr(day+'|chal'))()*opts.length)];
   return{id:c[1],stat,name:c[2],sub:c[3],kind:c[4],xp:c[5]};
 }
-function rollDirectiveOptions(mk){
-  const R=rng(hashStr(mk+'|dir'));const idx=new Set();
+function rollDirectiveOptions(mk,sh){
+  const R=rng(hashStr(mk+'|dir|'+(sh||0)));const idx=new Set();
   while(idx.size<3)idx.add(Math.floor(R()*DIRECTIVES.length));
   return[...idx].map(i=>{const d=DIRECTIVES[i];return{id:d[0],title:d[1],desc:d[2],target:d[3],link:d[4]}});
 }
+window.reshuffleDir=()=>{
+  S.directive.shuffle=(S.directive.shuffle||0)+1;
+  S.directive.options=rollDirectiveOptions(monthKey(S.daily.day),S.directive.shuffle);
+  save();renderAll();
+};
 
 /* ---------- rollover ---------- */
 function fullDayMinimums(day,d){
@@ -760,6 +794,7 @@ function ledgerAdd(kind,opts={}){
   if(unitOK)granted=awardUnit(stat,units,kind);
   let gain=xp;
   if(opts.size)gain=XP.free[opts.size]||xp;
+  if(opts.xpOverride)gain=opts.xpOverride;
   if(kind==='train'&&opts.progressed)gain+=XP.prog;
   if(installed('ch6')&&['ma','pwn','neet','cs50','thm'].includes(kind))gain=Math.round(gain*1.1);
   awardXP(gain,'ledger');
@@ -917,25 +952,32 @@ window.saveNote=()=>{const txt=($('note-t').value||'').trim();pushSession(txt);
   save();closeSheet();renderAll();if(txt)toast('Logged to ship log')};
 
 /* ---- train sheet ---- */
-window.openTrain=()=>{
-  const plan=S.trainPlan[weekday(S.daily.day)]||'Rest';
-  openSheet(`<h3>Log training</h3><div class="sub">≥45 min with a progression attempt = 1 STR unit. Cardio types go through + Log.</div>
-  <div class="frow"><label>Type</label><div class="seg" id="tt">
-    ${['Push','Pull','Legs','Full','Other'].map(t=>`<button class="${t===plan?'on':''}" onclick="segPick(this)">${t}</button>`).join('')}
-  </div></div>
-  <div class="frow"><label>Progressed vs last same-type?</label><div class="seg" id="tp">
-    <button class="on" onclick="segPick(this)">Yes</button><button onclick="segPick(this)">No</button></div></div>
-  <div class="frow"><label>PR? (optional)</label><input id="tpr" placeholder="e.g. bench 82.5×5"></div>
+window.openTrain=(loc,split)=>{
+  loc=loc||S.trainLoc||'gym';
+  split=split||splitKey(S.trainPlan[weekday(S.daily.day)]||'full');
+  S.trainLoc=loc;
+  const locs=[['gym','Gym'],['bars','Bars'],['home','Home']];
+  const splits=[['push','Push'],['pull','Pull'],['legs','Legs'],['full','Full']];
+  const wk=(WORKOUTS[loc]&&WORKOUTS[loc][split])||[];
+  const ex=wk.map(e=>`<div class="prow" style="padding:9px 14px"><div class="lab">${e[0]}</div><span class="meta num">${e[1]}</span></div>`).join('');
+  openSheet(`<h3>Train — build your session</h3><div class="sub">Where you are decides the workout. ≥30 min with a progression attempt = 1 STR unit.</div>
+  <div class="frow"><label>Where are you?</label><div class="seg">${locs.map(l=>`<button class="${l[0]===loc?'on':''}" onclick="openTrain('${l[0]}','${split}')">${l[1]}</button>`).join('')}</div></div>
+  <div class="frow"><label>Focus</label><div class="seg">${splits.map(s=>`<button class="${s[0]===split?'on':''}" onclick="openTrain('${loc}','${s[0]}')">${s[1]}</button>`).join('')}</div></div>
+  <div class="card" style="margin-bottom:10px">${ex||'<div class="empty">Freestyle — log whatever you did.</div>'}</div>
+  <div class="sub" style="margin:-4px 2px 10px">Progressive overload: add reps or load, or a harder variation, vs last time. Take the last hard set to ~1-3 reps in reserve.</div>
+  <div class="frow"><label>Progression attempt vs last time?</label><div class="seg" id="tp"><button class="on" onclick="segPick(this)">Yes</button><button onclick="segPick(this)">No</button></div></div>
+  <div class="frow"><label>PR / note (optional)</label><input id="tpr" placeholder="e.g. +1 pull-up · bench 82.5×5"></div>
   <div class="sheet-actions"><button class="btn sec" onclick="closeSheet()">Cancel</button>
-  <button class="btn acc" onclick="submitTrain()">Log session</button></div>`);
+  <button class="btn acc" onclick="submitTrain('${loc}','${split}')">Log session</button></div>`);
 };
 window.segPick=b=>{[...b.parentNode.children].forEach(x=>x.classList.remove('on'));b.classList.add('on')};
-window.submitTrain=()=>{
-  const type=document.querySelector('#tt .on').textContent;
+window.submitTrain=(loc,split)=>{
   const prog=document.querySelector('#tp .on').textContent==='Yes';
-  const pr=$('tpr').value.trim();
-  closeSheet();ledgerAdd('train',{type,progressed:prog});
-  if(pr){S._pend=0;pushSession('PR: '+pr);save();toast('PR logged — test it at the Gate',true)}
+  const pr=($('tpr')?$('tpr').value:'').trim();
+  const label=(WK_LOC[loc]||'')+' '+({push:'Push',pull:'Pull',legs:'Legs',full:'Full'}[split]||'Session');
+  S.trainLoc=loc;
+  closeSheet();ledgerAdd('train',{type:label,progressed:prog});
+  if(pr){S._pend=0;pushSession(label+' — '+pr);save();toast('Logged to ship log',true)}
 };
 
 /* ---- ledger sheet ---- */
@@ -959,6 +1001,13 @@ window.openLedger=()=>{
 window.ledgerPick=k=>{
   closeSheet();
   if(k==='train'){openTrain();return}
+  if(k==='read'||k==='longform'){
+    openSheet(`<h3>${KINDS[k][0]}</h3><div class="sub">Longer sessions pay more XP. The stat unit still caps once a day — growth comes from returning, not one marathon.</div>
+    <div class="frow"><label>How long?</label><div class="seg" id="dz">
+    <button class="on" onclick="segPick(this)">~30m</button><button onclick="segPick(this)">~1h</button><button onclick="segPick(this)">~2h</button><button onclick="segPick(this)">3h+</button></div></div>
+    <div class="sheet-actions"><button class="btn sec" onclick="closeSheet()">Cancel</button>
+    <button class="btn acc" onclick="submitTimed('${k}')">Log</button></div>`);return;
+  }
   if(['cardio','swim','sport'].includes(k)){
     openSheet(`<h3>${KINDS[k][0]}</h3><div class="sub">Minutes matter for the weekly 150-min VIT bonus. Bigger effort = more XP, same 1 unit.</div>
     <div class="frow"><label>Size</label><div class="seg" id="sz">
@@ -967,6 +1016,11 @@ window.ledgerPick=k=>{
     <button class="btn acc" onclick="submitSized('${k}')">Log</button></div>`);return;
   }
   ledgerAdd(k,{});
+};
+window.submitTimed=k=>{
+  const t=document.querySelector('#dz .on').textContent;
+  const xpMap={'~30m':10,'~1h':16,'~2h':24,'3h+':32};
+  closeSheet();ledgerAdd(k,{xpOverride:xpMap[t]||10});
 };
 window.submitSized=k=>{
   const t=document.querySelector('#sz .on').textContent[0];
@@ -1280,9 +1334,22 @@ window.hardReset=()=>{if(confirm('Wipe everything?')&&confirm('Really — no und
 
 /* ---- placement ---- */
 function placementNeeded(){return !S.placed}
+window.placementRestore=async()=>{
+  const tok=prompt('Paste your GitHub sync token to pull your existing backup:');
+  if(!tok)return;
+  S.sync=S.sync||{token:null,gist:null,last:null};S.sync.token=tok.trim();
+  toast('Checking cloud…');
+  const remote=await syncPull(true);
+  if(!remote){toast('No backup found for that token');return}
+  const g=S.sync.gist;
+  S=normalize(remote);S.sync=S.sync||{};S.sync.token=tok.trim();S.sync.gist=g;S.placed=true;
+  if(!S.daily.board.length){S.daily.board=dealBoard(S.daily.day);S.daily.chal=S.daily.chal||dealChallenge(S.daily.day)}
+  processRollovers();save();closeSheet();renderAll();toast('Restored from cloud — welcome back',true);
+};
 window.openPlacement=(step=0)=>{
   const steps=[
     `<h3>PLACEMENT — 1/5 · STR</h3><div class="sub">Best current lifts (tested or honest e1RM). Bodyweight first.</div>
+    <div class="banner" style="background:var(--acc-soft);border:1px solid var(--acc-line);color:#4a4a86;margin-bottom:12px">Used ODESSOS before on another device? <button class="btn sm acc" style="margin-left:4px" onclick="placementRestore()">Restore from cloud</button></div>
     <div class="frow"><label>Bodyweight kg</label><input id="p-bw" type="number" value="${S.bw}"></div>
     <div class="frow"><label>Squat kg</label><input id="p-sq" type="number" inputmode="decimal" placeholder="0 if untested"></div>
     <div class="frow"><label>Bench kg</label><input id="p-be" type="number" inputmode="decimal"></div>
@@ -1405,7 +1472,7 @@ function renderToday(){
     <div class="lab ${dl.done?'done-lab':''}">${esc(dl.title)}<small>${esc(dl.desc)}</small></div>
     ${dl.done?'':'<button class="btn sm sec" onclick="dirTick()">+1</button>'}</div></div>`;
   }else if(dir.options.length){
-    h+=`<div class="card dir-card"><div class="pill-h"><span class="nm">DIRECTIVE — PICK ONE FOR ${monthKey(d.day)}</span></div>`;
+    h+=`<div class="card dir-card"><div class="pill-h"><span class="nm">DIRECTIVE — PICK ONE FOR ${monthKey(d.day)}</span><span class="hrs"><button class="btn sm ghost" onclick="reshuffleDir()">shuffle</button></span></div>`;
     dir.options.forEach((o,i)=>{h+=`<button class="list-btn" onclick="lockDirective(${i})"><span>${o.title}<small>${o.desc}</small></span><span class="r">lock →</span></button>`});
     h+=`<button class="list-btn" onclick="lockDirective(-1)"><span>Custom…<small>your own month-scale target</small></span><span class="r">lock →</span></button></div>`;
   }
