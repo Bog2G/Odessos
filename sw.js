@@ -1,7 +1,7 @@
 /* ODESSOS v5 service worker.
    DEPLOY RULE: bump the version string below on EVERY deploy,
    or the installed PWA will keep serving the old build. */
-const ODESSOS_CACHE = 'odessos-v5-010';
+const ODESSOS_CACHE = 'odessos-v5-014';
 
 const PRECACHE = [
   './',

@@ -244,7 +244,7 @@ const GATES={
 
 /* ---- ledger kinds: [label, stat, unit?, xp, sub] ---- */
 const KINDS={
- train:['Training session','STR',1,XP.train,'≥45 min, progression attempt'],
+ train:['Training session','STR',1,XP.train,'≥30 min, progress vs last'],
  cardio:['Cardio session','VIT',1,15,'≥30 min steady or ≥15 min hard'],
  swim:['Swim','VIT',1,16,'≥20 min in the water'],
  sport:['Team sport','VIT',1,15,'football, basketball, tennis… ≥45 min real play'],
@@ -429,6 +429,23 @@ const WORKOUTS={
 };
 const splitKey=v=>{v=(v||'').toLowerCase();if(v.startsWith('push'))return'push';if(v.startsWith('pull'))return'pull';if(v.startsWith('leg'))return'legs';return'full'};
 
+// lift tracker: [id, name, type] where type 'w'=weighted (barbell), 'bw'=bodyweight/calisthenics
+const LIFTS=[['sq','Squat','w'],['be','Bench press','w'],['dl','Deadlift','w'],
+ ['ohp','Overhead press','w'],['row','Barbell row','w'],
+ ['pushup','Push-ups','bw'],['pu','Pull-ups','bw'],['dip','Dips','bw'],['pistol','Pistol squat','bw']];
+const LIFTMAP=Object.fromEntries(LIFTS.map(l=>[l[0],l]));
+// calisthenics progressions: [name, load factor × bodyweight]. Harder variation scores higher even at fewer reps.
+const PROG={
+ pushup:[['Incline',0.4],['Standard',0.64],['Diamond',0.8],['Archer',1.1],['One-arm',2.0]],
+ pu:[['Australian',0.4],['Band/negative',0.7],['Standard',1.0],['Archer',1.4],['One-arm',2.0]],
+ dip:[['Bench',0.5],['Standard',1.0],['Ring',1.15]],
+ pistol:[['Assisted',0.5],['Box',0.7],['Full',0.9]]
+};
+const progStd={pushup:1,pu:2,dip:1,pistol:2}; // default level index (Standard/Full)
+// calisthenics STR-gate standard (clear 2 of 3), by gate level
+const CAL_GATE={20:{pu:5,dip:10,push:25},40:{pu:10,dip:20,push:40},60:{pu:15,dip:30,push:60},80:{pu:20,dip:45,push:100},100:{pu:30,dip:60,push:150}};
+const e1rm=(load,reps)=>Math.round(load*(1+reps/30));
+
 const DIRECTIVES=[
 ['d01','Iron Month','20 training sessions',20,'train'],
 ['d02','Deep Shelf','Finish 2 books with notes',2,'bookdone'],
@@ -523,7 +540,7 @@ function defaultState(){
     sell:{week:mondayKey(t),outreach:0,posts:0,demos:0,quota:{outreach:3,posts:1,demos:1},paid:false},
     weekly:{week:mondayKey(t),cardioMin:0,vitBonus:false,mobility:0,chess:0,longform:0,posts:0,challenges:0,chalReroll:0},
     tracks:{ma:{course:'Foundations I',pct:0},pwn:{belt:'none',ch:0},neet:0,cs50:0,thm:0},
-    books:[],counters:{booksDone:0,reviews:0,demos:0,posts:0,talks:0,chaReps:0},
+    books:[],counters:{booksDone:0,reviews:0,demos:0,posts:0,talks:0,chaReps:0},lifts:{},
     directive:{month:monthKey(t),options:[],locked:null},
     bounties:[],bountyMonth:monthKey(t),audits:[],contracts:[],beacons:[],
     chrome:{owned:[],installed:[]},files:[],
@@ -551,7 +568,7 @@ function price(score){return PRICE[band(score)]}
 function nextGate(score){return Math.min(100,(Math.floor(score/20)+1)*20)}
 function atWall(st){const s=S.stats[st];return (s.score%20===19)&&s.cleared<nextGate(s.score)}
 function gatesClearedCount(s){return STATS.reduce((a,k)=>a+(s.stats[k].cleared/20),0)}
-function signalMult(){return S.shadow<20?1.1:S.shadow>=60?0.8:1}
+function signalMult(){return S.shadow<20?1.1:S.shadow>=70?0.9:1}
 function awardXP(n,why){
   if(installed('ch8')&&why==='ledger')n+=2;
   n=n*signalMult();
@@ -681,32 +698,54 @@ function fullDayMinimums(day,d){
   if(!d.study.ma)miss.push('STUDY');
   return miss;
 }
+const FULL_TARGET=90;
+const SELL_KINDS=['demo','outreach','post','event','convo','talk'];
+const STUDY_KINDS=['ma','pwn','neet','cs50','thm'];
+// a day is a target you fill however you want — build is the heaviest lever, everything real counts
+function dayScore(d){
+  const wd=weekday(d.day);const tgt=S.schedule[wd]||0;let s=0;
+  if(tgt>0)s+=Math.min(68,Math.round((d.buildMin||0)/tgt*55));
+  else s+=Math.min(40,Math.round((d.buildMin||0)/60*20));
+  if(d.train||d.restHonored)s+=35;
+  if(d.study.ma)s+=30;
+  if(d.study.pick)s+=8;
+  const K=d.kindsList||[];
+  s+=Math.min(36,K.filter(k=>SELL_KINDS.includes(k)).length*18);
+  if(d.chalDone)s+=25;
+  s+=Math.min(27,(d.doneQ?d.doneQ.length:0)*9);
+  if(d.lifted)s+=12;
+  s+=Math.min(24,K.filter(k=>!SELL_KINDS.includes(k)&&!STUDY_KINDS.includes(k)).length*8);
+  return s;
+}
+function dayHeld(d){return dayScore(d)>0}
 function closeDay(d){
   const day=d.day;
-  // mercy keyed to the week of the day being closed (fix #1)
   if(S.mercy.week!==mondayKey(day)){S.mercy={week:mondayKey(day),available:installed('ch4')?2:1,burnedInfo:null}}
-  const miss=fullDayMinimums(day,d);
-  let full=miss.length===0;
-  if(!full&&S.mercy.available>0){
-    S.mercy.available--;S.totals.mercyBurns++;
-    S.mercy.burnedInfo={covered:day,missed:miss.join(' · ')};
-    full=true;
-  }
+  const score=dayScore(d);
+  const full=score>=FULL_TARGET;
+  const held=score>0;
+  let burned=false;
   if(full){
-    S.streak++;S.bestStreak=Math.max(S.bestStreak,S.streak);S.totals.fullDays++;
-    let heal=15+(installed('ch7')?2:0);
-    S.shadow=Math.max(0,S.shadow-heal);
+    S.streak++;S.totals.fullDays++;
+    S.shadow=Math.max(0,S.shadow-(15+(installed('ch7')?2:0)));
+  }else if(held){
+    S.streak++;
+    S.shadow=Math.max(0,S.shadow-5);
+  }else if(S.mercy.available>0){
+    S.mercy.available--;S.totals.mercyBurns++;S.mercy.burnedInfo={covered:day,missed:'no activity'};
+    S.streak++;S.totals.fullDays++;burned=true;
   }else{
-    S.streak=0;S.shadow=Math.min(100,S.shadow+8*miss.length);
+    S.streak=0;S.shadow=Math.min(100,S.shadow+10);
   }
+  S.bestStreak=Math.max(S.bestStreak,S.streak);
   S.totals.dayCount++;
-  S.log.unshift({day,full,miss,buildMin:d.buildMin,note:d.note,xp:d.xp,
+  S.log.unshift({day,full,held,burn:burned,score,buildMin:d.buildMin,note:d.note,xp:d.xp,
     units:d.units,quests:d.doneQ.length,train:d.train?d.train.type:(d.restHonored?'Rest':null),
     kinds:d.kindsList||[],sessions:d.sessions||[],wake:d.wake||null});
   S.log=S.log.slice(0,1100);
   if(S.sleep&&!d.wake){const sl=S.sleep;sl.miss5.push(false);sl.miss5=sl.miss5.slice(-5);
     if(sl.miss5.filter(x=>!x).length>=3){sl.cur=Math.min(sl.start,sl.cur+20);sl.held=0;sl.miss5=[];}}
-  S.debrief={day,full,miss,burn:!!(S.mercy.burnedInfo&&S.mercy.burnedInfo.covered===day),
+  S.debrief={day,full,held,burn:burned,score,
     xp:d.xp,buildMin:d.buildMin,units:{...d.units},quests:d.doneQ.length,chal:!!d.chalDone,
     note:d.note,streak:S.streak,shadow:S.shadow,gaps:0};
 }
@@ -1038,12 +1077,21 @@ window.openGate=(stat)=>{
   const gate=Math.min(100,st.cleared+20);
   const G=GATES[stat][gate];if(!G){toast(stat+' is capped');return}
   if(G.t==='lifts'){
-    openSheet(`<h3>${stat} GATE ${gate} — ${G.n}</h3><div class="sub">${G.d}. Bodyweight ${S.bw}kg (edit in Settings). Enter today\u2019s tested or e1RM numbers.</div>
-    <div class="frow"><label>Squat kg</label><input id="g-sq" type="number" inputmode="decimal"></div>
-    <div class="frow"><label>Bench kg</label><input id="g-be" type="number" inputmode="decimal"></div>
-    <div class="frow"><label>Deadlift kg</label><input id="g-dl" type="number" inputmode="decimal"></div>
+    const bs=liftBest('sq'),bb=liftBest('be'),bd=liftBest('dl');
+    const hint=(bs||bb||bd)?`<div class="chip" style="display:block;margin-bottom:8px">tracked bests — squat ${bs?bs.e:'—'} · bench ${bb?bb.e:'—'} · deadlift ${bd?bd.e:'—'} (est 1RM)</div>`:'';
+    const cg=CAL_GATE[gate];
+    openSheet(`<h3>${stat} GATE ${gate} — ${G.n}</h3><div class="sub">Two ways to clear it — barbell or calisthenics. Any one path opens the band.</div>
+    <div class="frow"><div class="seg" id="g-mode"><button class="on" data-m="bar" onclick="segPick(this);strGateMode()">Barbell</button><button data-m="cal" onclick="segPick(this);strGateMode()">Calisthenics</button></div></div>
+    <div id="g-bar"><div class="sub">${G.d}. Bodyweight ${S.bw}kg. Enter tested or e1RM numbers.</div>${hint}
+      <div class="frow"><label>Squat kg</label><input id="g-sq" type="number" inputmode="decimal"></div>
+      <div class="frow"><label>Bench kg</label><input id="g-be" type="number" inputmode="decimal"></div>
+      <div class="frow"><label>Deadlift kg</label><input id="g-dl" type="number" inputmode="decimal"></div></div>
+    <div id="g-cal" style="display:none"><div class="sub">Clear 2 of 3 max sets: pull-ups ${cg.pu} · dips ${cg.dip} · push-ups ${cg.push}.</div>
+      <div class="frow"><label>Max pull-ups</label><input id="c-pu" type="number" inputmode="numeric"></div>
+      <div class="frow"><label>Max dips</label><input id="c-dip" type="number" inputmode="numeric"></div>
+      <div class="frow"><label>Max push-ups</label><input id="c-push" type="number" inputmode="numeric"></div></div>
     <div class="sheet-actions"><button class="btn sec" onclick="closeSheet()">Cancel</button>
-    <button class="btn acc" onclick="submitLiftGate('${stat}',${gate})">Verify</button></div>`);
+    <button class="btn acc" onclick="submitStrGate('${stat}',${gate})">Verify</button></div>`);
   }else if(G.t==='vit'){
     const paths=[];
     if(G.p.k5)paths.push(['k5','5k']);if(G.p.k10)paths.push(['k10','10k']);if(G.p.half)paths.push(['half','Half']);if(G.p.swim)paths.push(['swim','Swim']);
@@ -1074,6 +1122,16 @@ window.submitLiftGate=(stat,gate)=>{
   const hits=[sq>=r.sq*bw,be>=r.be*bw,dl>=r.dl*bw].filter(Boolean).length;
   if(hits>=2){closeSheet();clearGate(stat,gate,`sq${sq}/be${be}/dl${dl} @bw${bw}`)}
   else toast(hits+'/3 at standard — need 2. The bar says not yet.');
+};
+window.strGateMode=()=>{const b=document.querySelector('#g-mode .on');const cal=b&&b.dataset.m==='cal';
+  if($('g-bar'))$('g-bar').style.display=cal?'none':'';if($('g-cal'))$('g-cal').style.display=cal?'':'none'};
+window.submitStrGate=(stat,gate)=>{
+  const b=document.querySelector('#g-mode .on');const cal=b&&b.dataset.m==='cal';
+  if(!cal){submitLiftGate(stat,gate);return}
+  const cg=CAL_GATE[gate];const pu=+($('c-pu').value||0),dip=+($('c-dip').value||0),push=+($('c-push').value||0);
+  const hits=[pu>=cg.pu,dip>=cg.dip,push>=cg.push].filter(Boolean).length;
+  if(hits>=2){closeSheet();clearGate(stat,gate,`cal pu${pu}/dip${dip}/push${push}`)}
+  else toast(hits+'/3 calisthenics standards — need 2. Not yet.');
 };
 function parseTimeStr(v){const p=String(v).trim().split(':').map(Number);if(!p.length||p.some(isNaN))return null;
   if(p.length===2)return p[0]*60+p[1];if(p.length===3)return p[0]*3600+p[1]*60+p[2];return null}
@@ -1160,17 +1218,70 @@ window.editTrack=k=>{
   save();renderAll();
 };
 
+/* ---- lift tracker (progressive overload, all modalities) ---- */
+function liftHist(id){return S.lifts[id]||[]}
+function liftBest(id){const h=liftHist(id);return h.length?h.reduce((a,b)=>b.e>a.e?b:a):null}
+function liftLast(id){const h=liftHist(id);return h.length?h[h.length-1]:null}
+function liftScore(l,lvl,w,reps){
+  if(l[2]==='w')return e1rm(+w||0,reps);
+  const f=(lvl!=null&&PROG[l[0]]&&PROG[l[0]][lvl])?PROG[l[0]][lvl][1]:1.0;
+  return e1rm(f*(S.bw||0)+(+w||0),reps);
+}
+function liftDisp(l,e){
+  if(!e)return '—';
+  if(l[2]==='w')return e.w+'kg × '+e.r;
+  const nm=(e.lvl!=null&&PROG[l[0]]&&PROG[l[0]][e.lvl])?PROG[l[0]][e.lvl][0]:'Standard';
+  return nm+' × '+e.r+(e.w>0?' +'+e.w+'kg':'');
+}
+window.openLift=(id)=>{
+  const l=LIFTMAP[id];if(!l)return;const bw=l[2]==='bw';
+  const last=liftLast(id),best=liftBest(id);const h=liftHist(id).slice(-6).reverse();
+  const histHTML=h.length?h.map(e=>`<div class="prow" style="padding:7px 14px"><div class="lab" style="font-size:12.5px">${e.d}</div><span class="meta num">${liftDisp(l,e)} · e1RM ${e.e}</span></div>`).join(''):'<div class="empty">No entries yet — log your top set.</div>';
+  const defLvl=last&&last.lvl!=null?last.lvl:(progStd[id]!=null?progStd[id]:0);
+  const lvlHTML=bw?`<div class="frow"><label>Variation — harder counts more, even at fewer reps</label><div class="seg" id="lf-lvl">${PROG[id].map((p,i)=>`<button class="${i===defLvl?'on':''}" data-i="${i}" onclick="segPick(this)">${p[0]}</button>`).join('')}</div></div>`:'';
+  openSheet(`<h3>${l[1]}</h3><div class="sub">Log your best hard set. Beat your estimated 1RM and it\u2019s a PR — that\u2019s what moves STR.</div>
+  ${last?`<div class="chip" style="display:block;margin-bottom:6px">last: <b>${liftDisp(l,last)}</b> · e1RM ${last.e}${best&&best!==last?` · best e1RM ${best.e}`:''}</div>`:''}
+  ${lvlHTML}
+  <div class="frow"><label>${bw?'Added weight kg (0 = just bodyweight)':'Weight kg'}</label><input id="lf-w" type="number" inputmode="decimal" value="${last?last.w:(bw?0:'')}"></div>
+  <div class="frow"><label>Reps</label><input id="lf-r" type="number" inputmode="numeric" placeholder="${last?last.r:'5'}"></div>
+  <div class="sheet-actions"><button class="btn sec" onclick="closeSheet()">Cancel</button>
+  <button class="btn acc" onclick="submitLift('${id}')">Save set</button></div>
+  <div class="glbl" style="margin-top:14px">History</div><div class="card">${histHTML}</div>`);
+};
+window.submitLift=(id)=>{
+  const l=LIFTMAP[id];const bw=l[2]==='bw';
+  const w=+($('lf-w').value||0),r=parseInt($('lf-r').value||0);
+  if(!r||r<1){toast('Enter reps');return}
+  if(!bw&&w<=0){toast('Enter the weight');return}
+  let lvl=null;if(bw){const b=document.querySelector('#lf-lvl .on');lvl=b?+b.dataset.i:(progStd[id]||0)}
+  const e=liftScore(l,lvl,w,r);
+  const prevBest=liftBest(id);const today=todayStr();
+  const loggedToday=liftHist(id).some(x=>x.d===today);
+  S.lifts[id]=liftHist(id).concat([{d:today,lvl,w,r,e}]);
+  let msg=l[1]+' logged';
+  if(!loggedToday){awardXP(8,'lift');
+    if(!prevBest||e>prevBest.e){
+      awardXP(15,'pr');const got=awardUnit('STR',1,'pr');
+      S.daily.train=S.daily.train||{type:'Lift',progressed:true};if(S.daily.train)S.daily.train.progressed=true;
+      toast('NEW PR — '+l[1]+' e1RM '+e+(got?' · ▲STR':''),true);beep(920,.14,.06);msg='';}
+  }
+  if(msg)toast(msg+' · e1RM '+e);
+  S._pend=0;pushSession(l[1]+' '+liftDisp(l,{lvl,w,r})+' (e1RM '+e+')');S.daily.lifted=true;
+  closeSheet();save();renderAll();
+};
+
 /* ---- debrief ---- */
 window.openDebrief=()=>{
   const b=S.debrief;if(!b)return;
-  const verdict=b.burn?'FAILSAFE BURNED':b.full?'FULL SIGNAL':'SIGNAL BROKEN';
-  const vcol=b.burn?'var(--amber)':b.full?'var(--grn)':'var(--red)';
+  const verdict=b.burn?'FAILSAFE BURNED':b.full?'FULL SIGNAL':b.held?'HELD THE LINE':'SIGNAL BROKEN';
+  const vcol=b.burn?'var(--amber)':b.full?'var(--grn)':b.held?'var(--acc)':'var(--red)';
   const uT=STATS.filter(k=>(b.units[k]||0)>0).map(k=>'▲'+k+' '+b.units[k]).join('  ')||'—';
   const wd=weekday(S.daily.day);const plan=S.trainPlan[wd]||'Rest';const tgt=S.schedule[wd]||0;
   const drift=S.lastExport?dayNumber(todayStr())-dayNumber(S.lastExport):999;
   openSheet(`<h3 class="mono" style="letter-spacing:.08em;color:${vcol}">${verdict}</h3>
   <div class="sub">${b.day}${b.miss&&b.miss.length&&!b.full?' · missed '+b.miss.join(' / '):''}${b.burn?' · covered by failsafe':''}${b.gaps?' · +'+b.gaps+' gap day'+(b.gaps>1?'s':''):''}</div>
-  <div class="card"><div class="prow"><div class="lab">XP banked</div><span class="meta num" style="font-size:14px">${b.xp}</span></div>
+  <div class="card"><div class="prow"><div class="lab">Day score</div><span class="meta num" style="font-size:14px">${b.score!=null?b.score+' / '+FULL_TARGET:'—'}</span></div>
+  <div class="prow"><div class="lab">XP banked</div><span class="meta num" style="font-size:14px">${b.xp}</span></div>
   <div class="prow"><div class="lab">Build</div><span class="meta num">${fmtMin(b.buildMin||0)}</span></div>
   <div class="prow"><div class="lab">Units</div><span class="meta num">${uT}</span></div>
   <div class="prow"><div class="lab">Quests · Challenge</div><span class="meta num">${b.quests} · ${b.chal?'★':'—'}</span></div>
@@ -1435,7 +1546,7 @@ function statBarHTML(k){
 }
 function renderHeader(){
   const L=levelFromXP(S.xp);
-  const sig=S.shadow<20?' · signal +10%':S.shadow>=60?' · static −20%':'';
+  const sig=S.shadow<20?' · signal +10%':S.shadow>=70?' · static −10%':'';
   $('h-date').textContent=DOWN[weekday(S.daily.day)]+' '+S.daily.day+' · streak '+S.streak+' · static '+S.shadow+sig;
   $('h-rank').textContent=rankFor(L.l);
   $('h-lvl').textContent=L.l;$('h-xp').textContent=S.xp;
@@ -1446,6 +1557,24 @@ function renderToday(){
   const plan=S.trainPlan[wd]||'Rest';const tgt=S.schedule[wd]||0;
   let h='';
   if(d.mercyBanner)h+=`<div class="banner red">FAILSAFE BURNED — covered ${d.mercyBanner.covered} (${esc(d.mercyBanner.missed)}). ${S.mercy.available} left this week.<button class="x" onclick="S.daily.mercyBanner=null;save();renderAll()">×</button></div>`;
+  // TODAY — a target you fill however you want; build is the heaviest lever, everything real counts
+  const buildDone=tgt>0?d.buildMin>=tgt:d.buildMin>0;
+  const buildStat=tgt>0?fmtMin(d.buildMin)+' / '+fmtMin(tgt):(d.buildMin>0?fmtMin(d.buildMin):'no target');
+  const trainDone=!!(d.train||(plan==='Rest'&&d.restHonored));
+  const studyDone=!!d.study.ma;
+  const score=dayScore(d);const pct=Math.min(100,Math.round(score/FULL_TARGET*100));
+  const dayFull=score>=FULL_TARGET;const heldNow=score>0;
+  const item=(done,label,worth,act)=>`<div class="prow" style="padding:9px 14px"><span class="check ${done?'done':''}" style="width:17px;height:17px">${done?'✓':''}</span>
+    <div class="lab" style="font-size:12.5px">${label}<small>${worth}</small></div>${act||''}</div>`;
+  h+=`<div class="card" style="border:1px solid var(--acc-line)">
+    <div class="pill-h"><span class="nm">TODAY</span><span class="stt">· ${DOWN[wd]}</span><span class="hrs num">${dayFull?'FULL ✓':heldNow?pct+'%':'open'}</span></div>
+    <div style="padding:4px 14px 9px"><div style="height:7px;border-radius:4px;background:var(--line2);overflow:hidden"><i style="display:block;height:100%;width:${pct}%;background:${dayFull?'var(--grn)':'var(--acc)'};transition:width .4s"></i></div>
+    <div class="sub" style="margin-top:6px">${dayFull?'Full day locked in — the rest is bonus.':'Fill the bar your way. Build moves it most; one real action already keeps your streak.'}</div></div>
+    ${item(buildDone,'BUILD — MappedUP', (tgt>0?'top lever · ':'free day · ')+buildStat, S.live?'<span class="meta"><b>live</b></span>':'<button class="btn sm acc" onclick="jackIn()">start</button>')}
+    ${item(trainDone,'TRAIN — '+(plan==='Rest'?'rest':plan), trainDone?(d.train?d.train.type:'rest honored'):'gym · bars · home', trainDone?'':'<button class="btn sm sec" onclick="openTrain()">log</button>')}
+    ${item(studyDone,'STUDY — Math Academy', studyDone?'done':'daily goal', studyDone?'':'<button class="btn sm sec" onclick="maDone()">done</button>')}
+    <div class="prow" style="padding:9px 14px;border-bottom:0"><div class="lab" style="font-size:11px;color:var(--dim)">Sell, lifts, side quests, a long read — all move the bar too. Compose the day your way.</div></div>
+  </div>`;
   // today so far
   const uT=STATS.filter(k=>d.units[k]>0).map(k=>'▲'+k+' '+d.units[k]).join('  ');
   if(d.xp>0||uT)h+=`<div class="chip" style="display:block;margin-bottom:12px">today <b>+${d.xp} xp</b>${uT?' · '+uT:''}</div>`;
@@ -1485,7 +1614,7 @@ function renderToday(){
     ${d.restHonored?'':'<button class="btn sm sec" onclick="honorRest()">Honored</button>'}</div>`;
   }else{
     h+=`<div class="prow"><span class="check ${d.train?'done':''}">${d.train?'✓':''}</span>
-    <div class="lab ${d.train?'done-lab':''}">${plan} day — log the session<small>≥45 min, progression attempt · ▲STR</small></div>
+    <div class="lab ${d.train?'done-lab':''}">${plan} day — pick where & log<small>Gym · Bars · Home · ≥30 min, progress vs last · ▲STR</small></div>
     ${d.train?`<span class="meta">${d.train.type}${d.train.progressed?' ↑':''}</span>`:'<button class="btn sm acc" onclick="openTrain()">Log</button>'}</div>`;
   }
   h+='</div>';
@@ -1563,6 +1692,15 @@ function renderTracks(){
     <span class="meta num">${b.pct}%</span>
     <button class="btn sm ghost" onclick="event.stopPropagation();delBeacon(${i})">×</button></div>`;
   });
+  h+=`</div><div class="glbl">Lifts — progressive overload</div>`;
+  const liftRow=l=>{const best=liftBest(l[0]),last=liftLast(l[0]);
+    let trend='';const hh=liftHist(l[0]);
+    if(hh.length>=2){const p=hh[hh.length-2],c=hh[hh.length-1];trend=c.e>p.e?' <span style="color:var(--grn)">↑</span>':c.e<p.e?' <span style="color:var(--dim)">↓</span>':' <span style="color:var(--dim)">→</span>'}
+    return `<button class="list-btn" onclick="openLift('${l[0]}')"><span>${l[1]}<small>${last?'last '+liftDisp(l,last):'tap to log your top set'}</small></span><span class="r">${best?'e1RM '+best.e+trend:'—'}</span></button>`;};
+  h+=`<div class="glbl" style="margin:6px 2px 5px;opacity:.65">Barbell / gym</div><div class="card">`;
+  LIFTS.filter(l=>l[2]==='w').forEach(l=>{h+=liftRow(l)});
+  h+=`</div><div class="glbl" style="margin:6px 2px 5px;opacity:.65">Calisthenics — bars & home</div><div class="card">`;
+  LIFTS.filter(l=>l[2]==='bw').forEach(l=>{h+=liftRow(l)});
   h+=`</div><div class="glbl">Study ladder</div><div class="card">
   <button class="list-btn" onclick="editTrack('ma')"><span>Math Academy<small>${esc(t.ma.course)}</small></span><span class="r num">${t.ma.pct}%</span></button>
   <button class="list-btn" onclick="editTrack('pwn')"><span>pwn.college<small>belt ladder · free</small></span><span class="r num">${esc(t.pwn.belt)} · ${t.pwn.ch}ch</span></button>
@@ -1615,7 +1753,7 @@ function renderLog(){
     if(!S.log.length)h+=`<div class="card"><div class="empty">Day one. History starts tonight.</div></div>`;
     S.log.slice(0,lim).forEach(l=>{
       h+=`<div class="card day-card"><div class="dh"><span class="d">${l.day} ${DOWN[weekday(l.day)]}</span>
-      <span class="s" style="color:${l.full?'var(--grn)':'var(--red)'}">${l.full?'FULL':'MISS '+(l.miss||[]).join('/')}</span></div>
+      <span class="s" style="color:${l.full?'var(--grn)':l.held?'var(--acc)':'var(--red)'}">${l.burn?'FAILSAFE':l.full?'FULL':l.held?'HELD':'MISS'}</span></div>
       <div class="body"><span class="num">${fmtMin(l.buildMin||0)}</span> build · ${l.train?l.train+' · ':''}${l.quests||0} quests · <span class="num">${l.xp||0}</span> xp${l.wake?' · ☀ '+l.wake:''}
       ${l.note?`<div class="note">${esc(l.note)}</div>`:''}</div></div>`;
     });
