@@ -225,11 +225,11 @@ const GATES={
       60:{n:'SUB-25',t:'vit',d:'5k under 25:00 — or 10k under 52:00',p:{k5:1500,k10:3120}},
       80:{n:'SUB-21',t:'vit',d:'5k under 21:00 — or 10k under 43:30 — or half marathon under 1:37',p:{k5:1260,k10:2610,half:5820}},
       100:{n:'SUB-18',t:'vit',d:'5k under 18:00 — or 10k under 37:30 — or half under 1:23',p:{k5:1080,k10:2250,half:4980}}},
- INT:{20:{n:'BOOTED',t:'list',d:'MA diagnostic done + Foundations I ≥50% · 10 NeetCode solved · pwn Linux Luminarium done'},
-      40:{n:'OPERATOR',t:'list',d:'MA Foundations I complete · CS50 weeks 1–5 psets · NeetCode 50 · first pwn belt'},
-      60:{n:'ENGINEER',t:'list',d:'MA Foundations II complete · NeetCode 150 done · pwn yellow belt · THM SOC L1 100%'},
-      80:{n:'ARCHITECT',t:'list',d:'MA Foundations III or Linear Algebra · pwn green belt · SAL1-tier cert · one original security tool shipped'},
-      100:{n:'THE INSANE',t:'list',d:'MA Proofs/Analysis tier · pwn blue-belt tier · original research-grade project'}},
+ INT:{20:{n:'FOUNDATIONS',t:'list',d:'Odin Foundations complete (HTML/CSS/JS/Git) · SQLBolt done · 25 JS exercises · diagram MappedUP’s request flow (WeWeb→Xano→DB) from memory'},
+      40:{n:'BUILDER',t:'list',d:'Odin Full-Stack JS course or javascript.info I–II · first working LLM-API project built · 2 DeepLearning.AI LLM short courses · NeetCode 25 · a month living in Git'},
+      60:{n:'ENGINEER',t:'list',d:'CS50P or Automate the Boring Stuff finished · Karpathy Zero-to-Hero part 1 (micrograd + makemore) · one Python automation you actually use · NeetCode 75 · can modify & redeploy ODESSOS solo'},
+      80:{n:'ARCHITECT',t:'list',d:'Karpathy Zero-to-Hero complete (GPT from scratch) or fast.ai part 1 + your own fine-tuned model · AI feature prototype for MappedUP or shipping · OWASP Top-10 audit of MappedUP · NeetCode 150'},
+      100:{n:'THE INSANE',t:'list',d:'An original AI tool with real users · or research-grade work · could rebuild MappedUP’s core solo'}},
  WIS:{20:{n:'FIRST SHELF',t:'wis',b:3,c:800,d:'3 books w/ synthesis notes — or chess.com rapid 800'},
       40:{n:'READER',t:'wis',b:10,c:1000,d:'10 books — or rapid 1000'},
       60:{n:'SYNTHESIST',t:'wis',b:25,c:1200,d:'25 books — or rapid 1200 (top ~30%)'},
@@ -251,7 +251,7 @@ const KINDS={
  mobility:['Mobility','',0,10,'≥20 min · joint health, not VIT'],
  cold:['Cold shower','VIT',0,8,'full cold, 2+ min'],
  read:['Reading session','WIS',1,10,'≥25 min · 1/day counts'],
- chess:['Chess block','WIS',1,12,'30 min study or 3 rapid + 1 review · 4/wk'],
+ chess:['Chess block','WIS',1,12,'one 30-min rapid, reviewed after · or 30 min study · or 3 quick rapids + 1 review · 4/wk'],
  review:['Weekly review','WIS',1,14,'written, honest'],
  longform:['Long-form study + note','WIS',1,12,'technical/strategy piece · 2/wk'],
  ma:['Math Academy goal','INT',1,XP.ma,'daily XP goal hit'],
@@ -259,6 +259,8 @@ const KINDS={
  neet:['NeetCode problem','INT',1,XP.block,'solved unassisted'],
  cs50:['CS50 pset step','INT',1,XP.block,'milestone done'],
  thm:['THM room','INT',1,XP.block,'completed'],
+ uni:['Uni coursework','INT',1,XP.block,'forensics degree — lecture, lab, or assignment ≥30 min'],
+ code:['Code / AI block','INT',1,XP.block,'the spine: Odin · LLM APIs · Python · ML — ≥30 min'],
  demo:['Demo / discovery call','CHA',2,XP.sell.demo,'delivered'],
  outreach:['Outreach batch','CHA',1,XP.sell.outreach,'≥5 sent, ≥1 reply'],
  post:['Post published','CHA',1,XP.sell.post,'2/wk count'],
@@ -397,7 +399,7 @@ const CHALLENGES=[
 ['VIT','h_v3','100 floors in a day','stairs only, counted','cardio',60],
 ['INT','h_i1','3 NeetCode, no hints','one sitting, timer on','neet',70],
 ['INT','h_i2','Full pwn module in a day','start to finish','pwn',80],
-['INT','h_i3','60-min timed math paper','MA topics, self-graded honestly','ma',60],
+['INT','h_i3','Ship a mini-tool in one sitting','90 minutes, working, real','code',60],
 ['WIS','h_w1','100 pages + 1-page essay','same book, same day','read',70],
 ['WIS','h_w2','Book-club-of-one: finish + full note','current book to done','read',80],
 ['WIS','h_w3','10 rapid games, every one reviewed','the full session','chess',60],
@@ -449,7 +451,7 @@ const e1rm=(load,reps)=>Math.round(load*(1+reps/30));
 const DIRECTIVES=[
 ['d01','Iron Month','20 training sessions',20,'train'],
 ['d02','Deep Shelf','Finish 2 books with notes',2,'bookdone'],
-['d03','Signal Sprint','Math Academy goal, 25 days',25,'ma'],
+['d03','Code Sprint','Coding block, 25 days',25,'code'],
 ['d04','Cold Protocol','20 full cold showers',20,'cold'],
 ['d05','Sea Legs','8 swims',8,'swim'],
 ['d06','Road Work','12 cardio sessions',12,'cardio'],
@@ -475,7 +477,7 @@ const FILES=[
 ['f05','FILE 005 — SEVEN','7-day streak.','Anyone can burn for a night. Seven is a signal.'],
 ['f06','FILE 006 — THIRTY','30-day streak.','The Static hates you now. Good.'],
 ['f07','FILE 007 — IRON 40','STR reaches 40.','The bar doesn\u2019t negotiate. That\u2019s why you like it.'],
-['f08','FILE 008 — WIRED 40','INT reaches 40.','Somewhere in the stack, the math stopped being a wall and became a door.'],
+['f08','FILE 008 — WIRED 40','INT reaches 40.','Somewhere in the stack, the code stopped being someone else\u2019s and became yours.'],
 ['f09','FILE 009 — FIRST SHELF','Finish a book with a note.','Someone spent years writing it. You spent attention reading it. Fair trade.'],
 ['f10','FILE 010 — SALT','First sea swim logged.','The Black Sea keeps its own ledger. You\u2019re in it now.'],
 ['f11','FILE 011 — HUNDRED HOURS','100 Build hours.','Empires are boring up close. Hour after hour after hour.'],
@@ -503,7 +505,8 @@ const CHROMES=[
 /* ================= UTILS ================= */
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
-const todayStr=(d=new Date())=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const DAY_START_H=4; // a "day" runs 04:00→04:00 — post-midnight work counts toward the evening it belongs to
+const todayStr=(d)=>{const x=d?new Date(d):new Date(Date.now()-DAY_START_H*3600*1000);return x.getFullYear()+'-'+pad(x.getMonth()+1)+'-'+pad(x.getDate())};
 const parseDay=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c,12)};
 const dayNumber=s=>Math.round(parseDay(s).getTime()/86400000);
 const addDays=(s,n)=>{const d=parseDay(s);d.setDate(d.getDate()+n);return todayStr(d)};
@@ -527,19 +530,20 @@ function defaultState(){
   const t=todayStr();
   return {
     v:5, created:t, lastDay:t, xp:0,
-    bw:85, chessRating:0, maGoal:30,
+    bw:85, chessRating:0, maGoal:30, studyAnchor:'code',
     sleep:null, waterGoal:8, lastExport:null, trainLoc:'gym',
     sync:{token:null,gist:null,last:null},
     stats:Object.fromEntries(STATS.map(k=>[k,{score:0,prog:0,cleared:0}])),
     gatesLog:[],
-    schedule:{0:480,1:180,2:180,3:180,4:180,5:0,6:480},
-    trainPlan:{0:'Legs',1:'Push',2:'Pull',3:'Legs',4:'Push',5:'Rest',6:'Pull'},
+    schedule:{0:300,1:120,2:120,3:120,4:120,5:0,6:300},
+    phase:'build',
+    trainPlan:{0:'Legs',1:'Push',2:'Pull',3:'Full',4:'Push',5:'Pull',6:'Legs'},
     live:null,
     streak:0,bestStreak:0,shadow:12,
     mercy:{week:mondayKey(t),available:1,burnedInfo:null},
     sell:{week:mondayKey(t),outreach:0,posts:0,demos:0,quota:{outreach:3,posts:1,demos:1},paid:false},
-    weekly:{week:mondayKey(t),cardioMin:0,vitBonus:false,mobility:0,chess:0,longform:0,posts:0,challenges:0,chalReroll:0},
-    tracks:{ma:{course:'Foundations I',pct:0},pwn:{belt:'none',ch:0},neet:0,cs50:0,thm:0},
+    weekly:{week:mondayKey(t),cardioMin:0,vitBonus:false,mobility:0,chess:0,longform:0,posts:0,challenges:0,chalReroll:0,trainSessions:0,trainBonus:false},
+    tracks:{odin:0,ai:0,ma:{course:'Foundations I',pct:0},pwn:{belt:'none',ch:0},neet:0,cs50:0,thm:0},
     books:[],counters:{booksDone:0,reviews:0,demos:0,posts:0,talks:0,chaReps:0},lifts:{},
     directive:{month:monthKey(t),options:[],locked:null},
     bounties:[],bountyMonth:monthKey(t),audits:[],contracts:[],beacons:[],
@@ -638,13 +642,13 @@ function checkChrome(){
 /* ---------- board dealing ---------- */
 function scaleText(t,stat){
   const s=S.stats[stat]?S.stats[stat].score:0;let n=10;
-  if(/pushups/i.test(t))n=20+Math.round(1.5*S.stats.STR.score);
-  else if(/squats|lunges/i.test(t))n=25+2*S.stats.STR.score;
-  else if(/hang|sit|Plank/i.test(t))n=45+3*S.stats.STR.score;
-  else if(/rounds/i.test(t))n=3+Math.floor(S.stats.STR.score/12);
-  else if(/ladder to/i.test(t))n=4+Math.floor(S.stats.STR.score/10);
-  else if(/4×/.test(t))n=8+Math.floor(S.stats.STR.score/6);
-  else if(/run {n} min|rope {n} min/i.test(t)||/{n} min/.test(t))n=20+Math.floor(S.stats.VIT.score/2);
+  if(/pushups/i.test(t))n=30+Math.round(2*S.stats.STR.score);
+  else if(/squats|lunges/i.test(t))n=40+Math.round(2.5*S.stats.STR.score);
+  else if(/hang|sit|Plank/i.test(t))n=60+Math.round(3.5*S.stats.STR.score);
+  else if(/rounds/i.test(t))n=4+Math.floor(S.stats.STR.score/10);
+  else if(/ladder to/i.test(t))n=5+Math.floor(S.stats.STR.score/8);
+  else if(/4×/.test(t))n=12+Math.floor(S.stats.STR.score/5);
+  else if(/run {n} min|rope {n} min/i.test(t)||/{n} min/.test(t))n=25+Math.floor(S.stats.VIT.score/2);
   return t.replace('{n}',n);
 }
 function questXP(q){const base=[0,12,24,48][q.r]||12;let x=base+ (q.r===3?6:0);if(installed('ch5'))x=Math.round(x*1.1);return x}
@@ -671,8 +675,10 @@ function dealBoard(day){
   return out.map(o=>({id:o[0],stat:o[1],r:o[2],u:o[3],kind:o[5],name:scaleText(o[6],o[1]),sub:o[7]}));
 }
 function dealChallenge(day){
-  const stat=STATS[dayNumber(day)%5];
-  const opts=CHALLENGES.filter(c=>c[0]===stat);
+  const base=String(day).split('|')[0]; // reroll seeds append |cN — strip before date math
+  const stat=STATS[dayNumber(base)%5];
+  let opts=CHALLENGES.filter(c=>c[0]===stat);
+  if(S.phase!=='sell'){const f=opts.filter(c=>c[4]!=='outreach');if(f.length)opts=f;}
   const c=opts[Math.floor(rng(hashStr(day+'|chal'))()*opts.length)];
   return{id:c[1],stat,name:c[2],sub:c[3],kind:c[4],xp:c[5]};
 }
@@ -700,15 +706,17 @@ function fullDayMinimums(day,d){
 }
 const FULL_TARGET=90;
 const SELL_KINDS=['demo','outreach','post','event','convo','talk'];
-const STUDY_KINDS=['ma','pwn','neet','cs50','thm'];
+const STUDY_KINDS=['code','ma','pwn','neet','cs50','thm','uni'];
+const ANCHORS={code:'Code / AI spine',thm:'TryHackMe',pwn:'pwn.college',neet:'NeetCode',ma:'Math Academy',uni:'Uni coursework'};
 // a day is a target you fill however you want — build is the heaviest lever, everything real counts
 function dayScore(d){
   const wd=weekday(d.day);const tgt=S.schedule[wd]||0;let s=0;
   if(tgt>0)s+=Math.min(68,Math.round((d.buildMin||0)/tgt*55));
   else s+=Math.min(40,Math.round((d.buildMin||0)/60*20));
   if(d.train||d.restHonored)s+=35;
-  if(d.study.ma)s+=30;
-  if(d.study.pick)s+=8;
+  const K0=d.kindsList||[];const anch=S.studyAnchor||'ma';
+  if(K0.includes(anch)||(anch==='ma'&&d.study.ma))s+=30;
+  if(STUDY_KINDS.some(k=>k!==anch&&K0.includes(k)))s+=8;
   const K=d.kindsList||[];
   s+=Math.min(36,K.filter(k=>SELL_KINDS.includes(k)).length*18);
   if(d.chalDone)s+=25;
@@ -779,7 +787,7 @@ function processRollovers(){
   if(S.debrief&&guard>0)S.debrief.gaps=guard;
   // weekly resets (current week context)
   if(S.weekly.week!==mondayKey(today)){
-    S.weekly={week:mondayKey(today),cardioMin:0,vitBonus:false,mobility:0,chess:0,longform:0,posts:0,challenges:0,chalReroll:0};
+    S.weekly={week:mondayKey(today),cardioMin:0,vitBonus:false,mobility:0,chess:0,longform:0,posts:0,challenges:0,chalReroll:0,trainSessions:0,trainBonus:false};
   }
   if(S.sell.week!==mondayKey(today)){
     S.sell.week=mondayKey(today);S.sell.outreach=0;S.sell.posts=0;S.sell.demos=0;S.sell.paid=false;
@@ -835,13 +843,15 @@ function ledgerAdd(kind,opts={}){
   if(opts.size)gain=XP.free[opts.size]||xp;
   if(opts.xpOverride)gain=opts.xpOverride;
   if(kind==='train'&&opts.progressed)gain+=XP.prog;
-  if(installed('ch6')&&['ma','pwn','neet','cs50','thm'].includes(kind))gain=Math.round(gain*1.1);
+  if(installed('ch6')&&['code','ma','pwn','neet','cs50','thm','uni'].includes(kind))gain=Math.round(gain*1.1);
   awardXP(gain,'ledger');
   S.totals.ledger++;
   // side effects
-  if(kind==='train'){S.daily.train={type:opts.type||'Session',progressed:!!opts.progressed}}
+  if(kind==='train'){S.daily.train={type:opts.type||'Session',progressed:!!opts.progressed};
+    S.weekly.trainSessions=(S.weekly.trainSessions||0)+1;
+    if(!S.weekly.trainBonus&&S.weekly.trainSessions>=3){S.weekly.trainBonus=true;awardXP(25,'trainweek');toast('3rd session this week — floor cleared',true)}}
   if(kind==='ma')S.daily.study.ma=true;
-  if(['pwn','neet','cs50','thm'].includes(kind)){S.daily.study.pick=kind;
+  if(['code','pwn','neet','cs50','thm','uni'].includes(kind)){S.daily.study.pick=kind;
     if(kind==='neet')S.tracks.neet++;if(kind==='pwn')S.tracks.pwn.ch++;}
   if(['cardio','swim','sport'].includes(kind))S.weekly.cardioMin+=(opts.min||30);
   if(kind==='swim'){S.daily.kindsSwim=true}
@@ -856,7 +866,7 @@ function ledgerAdd(kind,opts={}){
   if(!S.weekly.vitBonus&&S.weekly.cardioMin>=150){S.weekly.vitBonus=true;awardUnit('VIT',1,'weekly-bonus');toast('VIT weekly bonus — 150 min banked')}
   // sell quota
   const q=S.sell.quota;
-  if(!S.sell.paid&&S.sell.outreach>=q.outreach&&S.sell.posts>=q.posts&&S.sell.demos>=q.demos){
+  if(S.phase==='sell'&&!S.sell.paid&&S.sell.outreach>=q.outreach&&S.sell.posts>=q.posts&&S.sell.demos>=q.demos){
     S.sell.paid=true;awardXP(XP.quota,'quota');toast('SELL QUOTA MET +'+XP.quota+' XP',true)}
   // directive auto-link
   const dl=S.directive.locked;
@@ -1023,7 +1033,7 @@ window.submitTrain=(loc,split)=>{
 window.openLedger=()=>{
   const groups={'Body':['train','cardio','swim','sport','mobility','cold','sunrise'],
     'Mind':['read','chess','review','longform','med'],
-    'Study':['ma','pwn','neet','cs50','thm'],
+    'Study':['code','pwn','neet','cs50','thm','uni','ma'],
     'People / Sell':['demo','outreach','post','event','convo','talk'],
     'Other':['custom']};
   let html=`<h3>Ledger — log anything</h3><div class="sub">Source of truth. Board didn\u2019t roll it? Doesn\u2019t matter — if it\u2019s real, log it.</div>`;
@@ -1209,6 +1219,8 @@ window.bookFinish=i=>{
 
 /* ---- tracks edits ---- */
 window.editTrack=k=>{
+  if(k==='odin'){const n=+prompt('The Odin Project — overall %:',S.tracks.odin||0);if(!isNaN(n))S.tracks.odin=Math.max(0,Math.min(100,n))}
+  if(k==='ai'){const n=+prompt('AI track — overall % (LLM courses → Zero-to-Hero → fast.ai):',S.tracks.ai||0);if(!isNaN(n))S.tracks.ai=Math.max(0,Math.min(100,n))}
   if(k==='ma'){const p=+prompt('Math Academy — current course % :',S.tracks.ma.pct);if(!isNaN(p))S.tracks.ma.pct=Math.max(0,Math.min(100,p));
     const c=prompt('Course name:',S.tracks.ma.course);if(c)S.tracks.ma.course=c}
   if(k==='pwn'){const b=prompt('pwn.college belt (none/white/orange/yellow/green/blue):',S.tracks.pwn.belt);if(b)S.tracks.pwn.belt=b}
@@ -1379,11 +1391,15 @@ window.syncRestore=async()=>{
 window.openSettings=()=>{
   openSheet(`<h3>Settings</h3><div class="sub">v5 · numbers are tunable, features are frozen</div>
   <div class="frow"><label>Bodyweight kg (STR gates)</label><input id="s-bw" type="number" value="${S.bw}"></div>
-  <div class="frow"><label>Chess.com rapid rating</label><input id="s-ch" type="number" value="${S.chessRating||''}" placeholder="0 if none"></div>
+  <div class="frow"><label>Chess.com RAPID rating (10–60 min games — your 30-min games count here)</label><input id="s-ch" type="number" value="${S.chessRating||''}" placeholder="0 if none"></div>
+  <div class="frow"><label>Daily study anchor (the STUDY line on Today)</label><select id="s-anchor">${Object.entries(ANCHORS).map(([k,v])=>`<option value="${k}" ${((S.studyAnchor||'ma')===k)?'selected':''}>${v}</option>`).join('')}</select></div>
+  <div class="frow"><label>Water goal (glasses/day)</label><input id="s-water" type="number" value="${S.waterGoal||8}"></div>
   <div class="frow"><label>Build schedule minutes — Sun,Mon,Tue,Wed,Thu,Fri,Sat</label>
     <input id="s-sched" value="${[0,1,2,3,4,5,6].map(i=>S.schedule[i]).join(',')}"></div>
   <div class="frow"><label>Train plan — Sun..Sat (Push/Pull/Legs/Full/Rest)</label>
     <input id="s-plan" value="${[0,1,2,3,4,5,6].map(i=>S.trainPlan[i]).join(',')}"></div>
+  <div class="frow"><label>MappedUP phase — flips the SELL card + weekly quota on/off</label>
+    <div class="seg" id="s-phase"><button class="${S.phase!=='sell'?'on':''}" data-v="build" onclick="segPick(this)">Build</button><button class="${S.phase==='sell'?'on':''}" data-v="sell" onclick="segPick(this)">Sell / outreach</button></div></div>
   <div class="frow"><label>Sell quota — outreach,posts,demos per week</label>
     <input id="s-quota" value="${S.sell.quota.outreach},${S.sell.quota.posts},${S.sell.quota.demos}"></div>
   <div class="frow"><label>GitHub sync token (classic PAT, gist scope only)</label>
@@ -1408,6 +1424,9 @@ window.saveSettings=()=>{
   const sc=$('s-sched').value.split(',').map(x=>Math.max(0,+x||0));if(sc.length===7)[0,1,2,3,4,5,6].forEach(i=>S.schedule[i]=sc[i]);
   const pl=$('s-plan').value.split(',').map(x=>x.trim());if(pl.length===7)[0,1,2,3,4,5,6].forEach(i=>S.trainPlan[i]=pl[i]||'Rest');
   const q=$('s-quota').value.split(',').map(x=>+x||0);if(q.length===3)S.sell.quota={outreach:q[0],posts:q[1],demos:q[2]};
+  S.studyAnchor=($('s-anchor')&&$('s-anchor').value)||'ma';
+  S.waterGoal=Math.max(1,+(($('s-water')&&$('s-water').value)||8));
+  const ph=document.querySelector('#s-phase .on');S.phase=(ph&&ph.dataset.v)||S.phase||'build';
   const tok=($('s-token').value||'').trim();
   S.sync=S.sync||{token:null,gist:null,last:null};
   const hadToken=!!S.sync.token;S.sync.token=tok||null;
@@ -1470,8 +1489,8 @@ window.openPlacement=(step=0)=>{
     `<h3>PLACEMENT — 3/5 · INT</h3><div class="sub">Pick the highest tier where <b>everything</b> listed is already true. Unsure = pick lower; Gates re-verify all of it anyway.</div>
     <div class="frow"><div class="seg" id="p-int" style="flex-direction:column">
       <button class="on" style="width:100%;text-align:left" onclick="segPick(this)" data-v="0">Starting fresh<small style="display:block;color:var(--dim);font-weight:400">no structured math/CS finished yet — most people start here</small></button>
-      <button style="width:100%;text-align:left" onclick="segPick(this)" data-v="20">BOOTED — all of these done<small style="display:block;color:var(--dim);font-weight:400">Math Academy diagnostic + ≥50% of Foundations I · 10 NeetCode solved · pwn.college Linux Luminarium</small></button>
-      <button style="width:100%;text-align:left" onclick="segPick(this)" data-v="40">OPERATOR — all of these done<small style="display:block;color:var(--dim);font-weight:400">Foundations I complete · CS50 weeks 1–5 psets · NeetCode 50 · first pwn belt</small></button></div></div>`,
+      <button style="width:100%;text-align:left" onclick="segPick(this)" data-v="20">FOUNDATIONS — all of these done<small style="display:block;color:var(--dim);font-weight:400">Odin Foundations · SQLBolt · 25 JS exercises · can diagram MappedUP’s request flow</small></button>
+      <button style="width:100%;text-align:left" onclick="segPick(this)" data-v="40">BUILDER — all of these done<small style="display:block;color:var(--dim);font-weight:400">Odin JS course or javascript.info I–II · a working LLM-API project · 2 LLM short courses · NeetCode 25</small></button></div></div>`,
     `<h3>PLACEMENT — 4/5 · WIS</h3>
     <div class="frow"><label>Books finished with real notes (lifetime, honest)</label><input id="p-books" type="number" value="0"></div>
     <div class="frow"><label>Chess.com rapid rating (0 if none)</label><input id="p-chess" type="number" value="0"></div>`,
@@ -1561,7 +1580,9 @@ function renderToday(){
   const buildDone=tgt>0?d.buildMin>=tgt:d.buildMin>0;
   const buildStat=tgt>0?fmtMin(d.buildMin)+' / '+fmtMin(tgt):(d.buildMin>0?fmtMin(d.buildMin):'no target');
   const trainDone=!!(d.train||(plan==='Rest'&&d.restHonored));
-  const studyDone=!!d.study.ma;
+  const anch=S.studyAnchor||'ma';const anchLbl=ANCHORS[anch]||'Study';
+  const studyDone=((d.kindsList||[]).includes(anch))||(anch==='ma'&&!!d.study.ma);
+  const studyAct=anch==='ma'?"maDone()":"pickStudy('"+anch+"')";
   const score=dayScore(d);const pct=Math.min(100,Math.round(score/FULL_TARGET*100));
   const dayFull=score>=FULL_TARGET;const heldNow=score>0;
   const item=(done,label,worth,act)=>`<div class="prow" style="padding:9px 14px"><span class="check ${done?'done':''}" style="width:17px;height:17px">${done?'✓':''}</span>
@@ -1571,8 +1592,8 @@ function renderToday(){
     <div style="padding:4px 14px 9px"><div style="height:7px;border-radius:4px;background:var(--line2);overflow:hidden"><i style="display:block;height:100%;width:${pct}%;background:${dayFull?'var(--grn)':'var(--acc)'};transition:width .4s"></i></div>
     <div class="sub" style="margin-top:6px">${dayFull?'Full day locked in — the rest is bonus.':'Fill the bar your way. Build moves it most; one real action already keeps your streak.'}</div></div>
     ${item(buildDone,'BUILD — MappedUP', (tgt>0?'top lever · ':'free day · ')+buildStat, S.live?'<span class="meta"><b>live</b></span>':'<button class="btn sm acc" onclick="jackIn()">start</button>')}
-    ${item(trainDone,'TRAIN — '+(plan==='Rest'?'rest':plan), trainDone?(d.train?d.train.type:'rest honored'):'gym · bars · home', trainDone?'':'<button class="btn sm sec" onclick="openTrain()">log</button>')}
-    ${item(studyDone,'STUDY — Math Academy', studyDone?'done':'daily goal', studyDone?'':'<button class="btn sm sec" onclick="maDone()">done</button>')}
+    ${item(trainDone,'TRAIN — '+(plan==='Rest'?'rest':plan), (trainDone?(d.train?d.train.type:'rest honored'):'gym · bars · home')+' · '+((S.weekly.trainSessions||0))+'/3 this week', trainDone?'':'<button class="btn sm sec" onclick="openTrain()">log</button>')}
+    ${item(studyDone,'STUDY — '+anchLbl, studyDone?'done':'daily block', studyDone?'':'<button class="btn sm sec" onclick="'+studyAct+'">done</button>')}
     <div class="prow" style="padding:9px 14px;border-bottom:0"><div class="lab" style="font-size:11px;color:var(--dim)">Sell, lifts, side quests, a long read — all move the bar too. Compose the day your way.</div></div>
   </div>`;
   // today so far
@@ -1632,9 +1653,9 @@ function renderToday(){
     <span class="meta">${d.buildBonus?'<b>target ✓</b>':''}</span></div></div>`;
   // STUDY
   h+=`<div class="card"><div class="pill-h"><span class="nm">STUDY</span><span class="stt">· INT</span></div>
-  <div class="prow"><span class="check ${d.study.ma?'done':''}">${d.study.ma?'✓':''}</span>
-    <div class="lab ${d.study.ma?'done-lab':''}">Math Academy — hit the daily goal<small>~${S.maGoal} XP ≈ 30 min · ▲INT</small></div>
-    ${d.study.ma?'':'<button class="btn sm acc" onclick="maDone()">Done</button>'}</div>
+  <div class="prow"><span class="check ${studyDone?'done':''}">${studyDone?'✓':''}</span>
+    <div class="lab ${studyDone?'done-lab':''}">${anchLbl} — daily block<small>≥30 min · ▲INT · change anchor in Settings</small></div>
+    ${studyDone?'':'<button class="btn sm acc" onclick="'+studyAct+'">Done</button>'}</div>
   <div class="prow"><span class="check ${d.study.pick?'done':''}">${d.study.pick?'✓':''}</span>
     <div class="lab">Pick one<small>▲INT · extra picks still count (cap 3/day)</small></div></div>
   <div class="prow"><div class="lab" style="display:flex;gap:6px;flex-wrap:wrap">
@@ -1642,7 +1663,8 @@ function renderToday(){
     <button class="btn sm sec" onclick="pickStudy('neet')">NeetCode</button>
     <button class="btn sm sec" onclick="pickStudy('cs50')">CS50</button>
     <button class="btn sm sec" onclick="pickStudy('thm')">THM</button></div></div></div>`;
-  // SELL
+  // SELL (only in sell phase — flip in Settings when the time comes)
+  if(S.phase==='sell'){
   const q=S.sell.quota;
   h+=`<div class="card"><div class="pill-h"><span class="nm">SELL</span><span class="stt">· CHA · WEEKLY</span>
     <span class="hrs num">${S.sell.paid?'quota ✓':''}</span></div>
@@ -1652,6 +1674,7 @@ function renderToday(){
     <span class="meta num">${S.sell.posts}/${q.posts}</span><button class="btn sm sec" onclick="ledgerAdd('post')">+1</button></div>
   <div class="prow"><div class="lab">Demos / calls<small>▲▲CHA</small></div>
     <span class="meta num">${S.sell.demos}/${q.demos}</span><button class="btn sm sec" onclick="ledgerAdd('demo')">+1</button></div></div>`;
+  }
   // BOARD
   const maxR=1+(installed('ch1')?1:0);
   h+=`<div class="glbl">Side quests <span class="r"><button class="btn sm ghost" onclick="rerollBoard()">reroll ${S.daily.reroll}/${maxR}</button></span></div><div class="card">`;
@@ -1702,6 +1725,8 @@ function renderTracks(){
   h+=`</div><div class="glbl" style="margin:6px 2px 5px;opacity:.65">Calisthenics — bars & home</div><div class="card">`;
   LIFTS.filter(l=>l[2]==='bw').forEach(l=>{h+=liftRow(l)});
   h+=`</div><div class="glbl">Study ladder</div><div class="card">
+  <button class="list-btn" onclick="editTrack('odin')"><span>The Odin Project — JS path<small>free · Foundations → Full-Stack JavaScript · the main track</small></span><span class="r num">${t.odin||0}%</span></button>
+  <button class="list-btn" onclick="editTrack('ai')"><span>AI track<small>DeepLearning.AI LLM courses → Karpathy Zero-to-Hero → fast.ai · free</small></span><span class="r num">${t.ai||0}%</span></button>
   <button class="list-btn" onclick="editTrack('ma')"><span>Math Academy<small>${esc(t.ma.course)}</small></span><span class="r num">${t.ma.pct}%</span></button>
   <button class="list-btn" onclick="editTrack('pwn')"><span>pwn.college<small>belt ladder · free</small></span><span class="r num">${esc(t.pwn.belt)} · ${t.pwn.ch}ch</span></button>
   <button class="list-btn" onclick="editTrack('neet')"><span>NeetCode 150<small>DSA roadmap · free</small></span><span class="r num">${t.neet}/150</span></button>
