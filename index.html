@@ -225,10 +225,10 @@ const GATES={
       60:{n:'SUB-25',t:'vit',d:'5k under 25:00 — or 10k under 52:00',p:{k5:1500,k10:3120}},
       80:{n:'SUB-21',t:'vit',d:'5k under 21:00 — or 10k under 43:30 — or half marathon under 1:37',p:{k5:1260,k10:2610,half:5820}},
       100:{n:'SUB-18',t:'vit',d:'5k under 18:00 — or 10k under 37:30 — or half under 1:23',p:{k5:1080,k10:2250,half:4980}}},
- INT:{20:{n:'FOUNDATIONS',t:'list',d:'Odin Foundations complete (HTML/CSS/JS/Git) · SQLBolt done · 25 JS exercises · diagram MappedUP’s request flow (WeWeb→Xano→DB) from memory'},
-      40:{n:'BUILDER',t:'list',d:'Odin Full-Stack JS course or javascript.info I–II · first working LLM-API project built · 2 DeepLearning.AI LLM short courses · NeetCode 25 · a month living in Git'},
-      60:{n:'ENGINEER',t:'list',d:'CS50P or Automate the Boring Stuff finished · Karpathy Zero-to-Hero part 1 (micrograd + makemore) · one Python automation you actually use · NeetCode 75 · can modify & redeploy ODESSOS solo'},
-      80:{n:'ARCHITECT',t:'list',d:'Karpathy Zero-to-Hero complete (GPT from scratch) or fast.ai part 1 + your own fine-tuned model · AI feature prototype for MappedUP or shipping · OWASP Top-10 audit of MappedUP · NeetCode 150'},
+ INT:{20:{n:'FOUNDATIONS',t:'list',d:'boot.dev Python course complete · boot.dev Linux/command-line + Git courses · diagram MappedUP’s request flow (WeWeb→Xano→DB) from memory'},
+      40:{n:'BUILDER',t:'list',d:'boot.dev Algorithms + Data Structures · JS-for-Xano slice (javascript.info fundamentals; read & write a Xano lambda in sandbox) · 2 DeepLearning.AI LLM short courses · first working LLM-API project in Python · NeetCode 25'},
+      60:{n:'ENGINEER',t:'list',d:'boot.dev HTTP servers + SQL courses · Karpathy Zero-to-Hero part 1 (micrograd + makemore) · one Python automation you actually use · NeetCode 75 · can modify & redeploy ODESSOS solo'},
+      80:{n:'ARCHITECT',t:'list',d:'Karpathy Zero-to-Hero complete (GPT from scratch) or fast.ai part 1 + your own fine-tuned model · AI feature prototype for MappedUP or shipping · OWASP Top-10 audit of MappedUP · boot.dev capstone or equivalent deployed · NeetCode 150'},
       100:{n:'THE INSANE',t:'list',d:'An original AI tool with real users · or research-grade work · could rebuild MappedUP’s core solo'}},
  WIS:{20:{n:'FIRST SHELF',t:'wis',b:3,c:800,d:'3 books w/ synthesis notes — or chess.com rapid 800'},
       40:{n:'READER',t:'wis',b:10,c:1000,d:'10 books — or rapid 1000'},
@@ -260,7 +260,7 @@ const KINDS={
  cs50:['CS50 pset step','INT',1,XP.block,'milestone done'],
  thm:['THM room','INT',1,XP.block,'completed'],
  uni:['Uni coursework','INT',1,XP.block,'forensics degree — lecture, lab, or assignment ≥30 min'],
- code:['Code / AI block','INT',1,XP.block,'the spine: Odin · LLM APIs · Python · ML — ≥30 min'],
+ code:['Code / AI block','INT',1,XP.block,'the spine: boot.dev · LLM APIs · Python · ML — ≥30 min'],
  demo:['Demo / discovery call','CHA',2,XP.sell.demo,'delivered'],
  outreach:['Outreach batch','CHA',1,XP.sell.outreach,'≥5 sent, ≥1 reply'],
  post:['Post published','CHA',1,XP.sell.post,'2/wk count'],
@@ -651,7 +651,7 @@ function scaleText(t,stat){
   else if(/run {n} min|rope {n} min/i.test(t)||/{n} min/.test(t))n=25+Math.floor(S.stats.VIT.score/2);
   return t.replace('{n}',n);
 }
-function questXP(q){const base=[0,12,24,48][q.r]||12;let x=base+ (q.r===3?6:0);if(installed('ch5'))x=Math.round(x*1.1);return x}
+function questXP(q){const base=[0,20,35,60][q.r]||20;let x=base+ (q.r===3?6:0);if(installed('ch5'))x=Math.round(x*1.1);return x}
 function dealBoard(day){
   const seed=hashStr(day+'|board');const R=rng(seed);
   const recent=new Set(S.served.slice(-30));
@@ -720,9 +720,9 @@ function dayScore(d){
   const K=d.kindsList||[];
   s+=Math.min(36,K.filter(k=>SELL_KINDS.includes(k)).length*18);
   if(d.chalDone)s+=25;
-  s+=Math.min(27,(d.doneQ?d.doneQ.length:0)*9);
+  s+=Math.min(36,(d.doneQ?d.doneQ.length:0)*12);
   if(d.lifted)s+=12;
-  s+=Math.min(24,K.filter(k=>!SELL_KINDS.includes(k)&&!STUDY_KINDS.includes(k)).length*8);
+  s+=Math.min(18,K.filter(k=>!SELL_KINDS.includes(k)&&!STUDY_KINDS.includes(k)).length*6);
   return s;
 }
 function dayHeld(d){return dayScore(d)>0}
@@ -929,7 +929,8 @@ window.questDone=(i)=>{
     if(q.kind==='swim')S.daily.kindsSwim=true;
     (S.daily.kindsList=S.daily.kindsList||[]).push(q.kind);
   }
-  beep(700,.06);toast('SIDE QUEST +'+questXP(q)+' XP');
+  if(S.daily.doneQ.length>=4&&!S.daily.boardClear){S.daily.boardClear=true;awardXP(40,'clear');toast('BOARD CLEAR — +40 XP',true);beep(880,.12,.05)}
+  else{beep(700,.06);toast('SIDE QUEST +'+questXP(q)+' XP')}
   checkFiles();checkChrome();save();renderAll();
 };
 window.chalDone=()=>{
@@ -1219,7 +1220,7 @@ window.bookFinish=i=>{
 
 /* ---- tracks edits ---- */
 window.editTrack=k=>{
-  if(k==='odin'){const n=+prompt('The Odin Project — overall %:',S.tracks.odin||0);if(!isNaN(n))S.tracks.odin=Math.max(0,Math.min(100,n))}
+  if(k==='odin'){const n=+prompt('boot.dev backend path — overall %:',S.tracks.odin||0);if(!isNaN(n))S.tracks.odin=Math.max(0,Math.min(100,n))}
   if(k==='ai'){const n=+prompt('AI track — overall % (LLM courses → Zero-to-Hero → fast.ai):',S.tracks.ai||0);if(!isNaN(n))S.tracks.ai=Math.max(0,Math.min(100,n))}
   if(k==='ma'){const p=+prompt('Math Academy — current course % :',S.tracks.ma.pct);if(!isNaN(p))S.tracks.ma.pct=Math.max(0,Math.min(100,p));
     const c=prompt('Course name:',S.tracks.ma.course);if(c)S.tracks.ma.course=c}
@@ -1489,8 +1490,8 @@ window.openPlacement=(step=0)=>{
     `<h3>PLACEMENT — 3/5 · INT</h3><div class="sub">Pick the highest tier where <b>everything</b> listed is already true. Unsure = pick lower; Gates re-verify all of it anyway.</div>
     <div class="frow"><div class="seg" id="p-int" style="flex-direction:column">
       <button class="on" style="width:100%;text-align:left" onclick="segPick(this)" data-v="0">Starting fresh<small style="display:block;color:var(--dim);font-weight:400">no structured math/CS finished yet — most people start here</small></button>
-      <button style="width:100%;text-align:left" onclick="segPick(this)" data-v="20">FOUNDATIONS — all of these done<small style="display:block;color:var(--dim);font-weight:400">Odin Foundations · SQLBolt · 25 JS exercises · can diagram MappedUP’s request flow</small></button>
-      <button style="width:100%;text-align:left" onclick="segPick(this)" data-v="40">BUILDER — all of these done<small style="display:block;color:var(--dim);font-weight:400">Odin JS course or javascript.info I–II · a working LLM-API project · 2 LLM short courses · NeetCode 25</small></button></div></div>`,
+      <button style="width:100%;text-align:left" onclick="segPick(this)" data-v="20">FOUNDATIONS — all of these done<small style="display:block;color:var(--dim);font-weight:400">boot.dev Python + Linux + Git · can diagram MappedUP’s request flow</small></button>
+      <button style="width:100%;text-align:left" onclick="segPick(this)" data-v="40">BUILDER — all of these done<small style="display:block;color:var(--dim);font-weight:400">boot.dev DSA · a working LLM-API project · 2 LLM short courses · NeetCode 25</small></button></div></div>`,
     `<h3>PLACEMENT — 4/5 · WIS</h3>
     <div class="frow"><label>Books finished with real notes (lifetime, honest)</label><input id="p-books" type="number" value="0"></div>
     <div class="frow"><label>Chess.com rapid rating (0 if none)</label><input id="p-chess" type="number" value="0"></div>`,
@@ -1677,7 +1678,7 @@ function renderToday(){
   }
   // BOARD
   const maxR=1+(installed('ch1')?1:0);
-  h+=`<div class="glbl">Side quests <span class="r"><button class="btn sm ghost" onclick="rerollBoard()">reroll ${S.daily.reroll}/${maxR}</button></span></div><div class="card">`;
+  h+=`<div class="glbl">Side quests <span class="r"><button class="btn sm ghost" onclick="rerollBoard()">reroll ${S.daily.reroll}/${maxR}</button></span></div><div class="sub" style="margin:-2px 2px 8px">The board outranks the ledger — bigger pay, same act counts once.</div><div class="card">`;
   d.board.forEach((qd,i)=>{
     const done=d.doneQ.includes(qd.id);
     h+=`<div class="prow ${qd.r===3?'rare':''}"><span class="check ${done?'done':''}">${done?'✓':''}</span>
@@ -1724,8 +1725,14 @@ function renderTracks(){
   LIFTS.filter(l=>l[2]==='w').forEach(l=>{h+=liftRow(l)});
   h+=`</div><div class="glbl" style="margin:6px 2px 5px;opacity:.65">Calisthenics — bars & home</div><div class="card">`;
   LIFTS.filter(l=>l[2]==='bw').forEach(l=>{h+=liftRow(l)});
-  h+=`</div><div class="glbl">Study ladder</div><div class="card">
-  <button class="list-btn" onclick="editTrack('odin')"><span>The Odin Project — JS path<small>free · Foundations → Full-Stack JavaScript · the main track</small></span><span class="r num">${t.odin||0}%</span></button>
+  h+=`</div>`;
+  h+=`<div class="glbl">The spine — Code / AI path</div><div class="card">`;
+  {const cl=(S.stats.INT&&S.stats.INT.cleared)||0;let cur=false;
+  [20,40,60,80,100].forEach(g=>{const G=GATES.INT[g];const done=cl>=g;const isCur=!done&&!cur;if(isCur)cur=true;
+    h+=`<div class="prow"${isCur?' style="background:var(--acc-soft)"':''}><span class="check ${done?'done':''}" style="width:17px;height:17px">${done?'✓':(isCur?'▶':'')}</span><div class="lab ${done?'done-lab':''}" style="font-size:12.5px">${isCur?'<b>':''}Stage ${g/20} — ${G.n}${isCur?'</b>':''} · INT ${g}<small>${G.d}</small></div></div>`;});
+  h+=`<div class="prow" style="border-bottom:0"><div class="lab" style="font-size:11px;color:var(--dim)">One stage at a time · ≥30 min/day on the current stage → tap STUDY done.</div></div></div>`;}
+  h+=`<div class="glbl">Study ladder</div><div class="card">
+  <button class="list-btn" onclick="editTrack('odin')"><span>boot.dev — backend path<small>Python · Linux · Git · SQL · HTTP · the main track</small></span><span class="r num">${t.odin||0}%</span></button>
   <button class="list-btn" onclick="editTrack('ai')"><span>AI track<small>DeepLearning.AI LLM courses → Karpathy Zero-to-Hero → fast.ai · free</small></span><span class="r num">${t.ai||0}%</span></button>
   <button class="list-btn" onclick="editTrack('ma')"><span>Math Academy<small>${esc(t.ma.course)}</small></span><span class="r num">${t.ma.pct}%</span></button>
   <button class="list-btn" onclick="editTrack('pwn')"><span>pwn.college<small>belt ladder · free</small></span><span class="r num">${esc(t.pwn.belt)} · ${t.pwn.ch}ch</span></button>
